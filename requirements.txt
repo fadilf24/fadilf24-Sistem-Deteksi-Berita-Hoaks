@@ -5,3 +5,4 @@ nltk
 Sastrawi
 matplotlib
 seaborn
+google-generativeai
