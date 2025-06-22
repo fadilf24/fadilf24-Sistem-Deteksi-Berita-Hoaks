@@ -6,6 +6,10 @@ from classification import split_data, train_naive_bayes, predict_naive_bayes
 from evaluation import evaluate_model, generate_classification_report
 from interpretation import configure_gemini, analyze_with_gemini
 from sklearn.preprocessing import LabelEncoder
+import nltk
+nltk.download('punkt')
+
+from nltk.tokenize import word_tokenize
 
 st.title("Aplikasi Deteksi Berita Hoaks Menggunakan Naive Bayes & LLM (Gemini)")
 
