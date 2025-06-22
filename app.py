@@ -7,7 +7,7 @@ from evaluation import evaluate_model, generate_classification_report
 from interpretation import configure_gemini, analyze_with_gemini
 from sklearn.preprocessing import LabelEncoder
 import nltk
-nltk.download('punkt')
+nltk.download('punkt_tab')
 nltk.download('stopwords')  # jika pakai stopwords
 from nltk.tokenize import word_tokenize
 
