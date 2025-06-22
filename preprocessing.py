@@ -5,6 +5,8 @@ import nltk
 from nltk.tokenize import word_tokenize
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 from Sastrawi.StopWordRemover.StopWordRemoverFactory import StopWordRemoverFactory
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
 
 # Download NLTK tokenizer
 nltk.download('punkt')
