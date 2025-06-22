@@ -8,7 +8,7 @@ from interpretation import configure_gemini, analyze_with_gemini
 from sklearn.preprocessing import LabelEncoder
 import nltk
 nltk.download('punkt')
-
+nltk.download('stopwords')  # jika pakai stopwords
 from nltk.tokenize import word_tokenize
 
 st.title("Aplikasi Deteksi Berita Hoaks Menggunakan Naive Bayes & LLM (Gemini)")
