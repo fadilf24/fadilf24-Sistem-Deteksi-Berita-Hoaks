@@ -7,11 +7,11 @@ from evaluation import evaluate_model, generate_classification_report
 from interpretation import configure_gemini, analyze_with_gemini
 from sklearn.preprocessing import LabelEncoder
 import nltk
-nltk.download('stopwords')  # hanya stopwords, punkt_tab dihapus
+nltk.download('stopwords')  # hanya stopwords (punkt_tab dihapus)
 
 st.title("Aplikasi Deteksi Berita Hoaks Menggunakan Naive Bayes & LLM (Gemini)")
 
-# ✅ API Key Gemini (Perhatian: sebaiknya pakai Streamlit Secrets di real production)
+# ✅ API Key Gemini (catatan: di production sebaiknya pakai Streamlit Secrets)
 api_key = "AIzaSyDFRv6-gi44fDsJvR_l4E8N2Fxd45oGozU"
 
 # ✅ Load dataset
