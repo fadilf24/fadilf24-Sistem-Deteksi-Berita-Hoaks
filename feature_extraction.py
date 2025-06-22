@@ -27,8 +27,15 @@ def tfidf_to_dataframe(tfidf_matrix, vectorizer):
 def save_tfidf_output(df_preprocessed, tfidf_df, preprocessed_path='preprocessed_data.csv', tfidf_path='tfidf_output.csv'):
     """
     Simpan hasil preprocessing dan TF-IDF ke file CSV.
+    Label 1 diubah menjadi 'hoax', 0 menjadi 'non-hoax'.
     """
-    df_preprocessed.to_csv(preprocessed_path, index=False)
+    df_to_save = df_preprocessed.copy()
+
+    if 'label' in df_to_save.columns:
+        df_to_save['label'] = df_to_save['label'].apply(lambda x: 'Hoax' if x == 1 else 'Non-Hoax')
+
+    df_to_save.to_csv(preprocessed_path, index=False)
     tfidf_df.to_csv(tfidf_path, index=False)
+
     print(f"Preprocessed data saved to {preprocessed_path}")
     print(f"TF-IDF output saved to {tfidf_path}")
