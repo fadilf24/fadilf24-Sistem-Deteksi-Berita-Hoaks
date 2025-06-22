@@ -2,15 +2,16 @@ import pandas as pd
 import numpy as np
 import re
 import nltk
+# Download NLTK tokenizer
+nltk.download('punkt')
+nltk.download('stopwords')  # Hapus baris ini jika kamu tidak pakai stopwords
 from nltk.tokenize import word_tokenize
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 from Sastrawi.StopWordRemover.StopWordRemoverFactory import StopWordRemoverFactory
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 
-# Download NLTK tokenizer
-nltk.download('punkt')
-nltk.download('stopwords')  # Hapus baris ini jika kamu tidak pakai stopwords
+
 
 # Inisialisasi Sastrawi Stopword & Stemmer
 stopword_factory = StopWordRemoverFactory()
