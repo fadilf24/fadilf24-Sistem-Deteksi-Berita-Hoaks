@@ -3,7 +3,7 @@ import numpy as np
 import re
 import nltk
 # Download NLTK tokenizer
-nltk.download('punkt')
+nltk.download('punkt_tab')
 nltk.download('stopwords')  # Hapus baris ini jika kamu tidak pakai stopwords
 from nltk.tokenize import word_tokenize
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
