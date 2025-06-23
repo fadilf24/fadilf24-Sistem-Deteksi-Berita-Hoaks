@@ -1,13 +1,11 @@
-import pandas as pd
-import numpy as np
 import re
 import nltk
-nltk.download('stopwords')  # hanya stopwords, punkt_tab dihapus
-
-from nltk.tokenize import wordpunct_tokenize  # Ganti dari word_tokenize
+from nltk.tokenize import word_tokenize
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 from Sastrawi.StopWordRemover.StopWordRemoverFactory import StopWordRemoverFactory
-from nltk.corpus import stopwords
+
+# Download tokenizer
+nltk.download('punkt')
 
 # Inisialisasi Sastrawi Stopword & Stemmer
 stopword_factory = StopWordRemoverFactory()
@@ -16,57 +14,16 @@ stop_words = set(stopword_factory.get_stop_words())
 stemmer_factory = StemmerFactory()
 stemmer = stemmer_factory.create_stemmer()
 
-def load_and_clean_data(df1, df2):
-    """
-    Menggabungkan, membersihkan kolom, dan menghapus missing value.
-    """
-    df2_renamed = df2.rename(columns={
-        'Judul': 'judul',
-        'Konten': 'narasi',
-        'Label': 'label'
-    })
-    kolom_tidak_dipakai = ['ID', 'Tanggal', 'tanggal', 'Link', 'nama file gambar']
-    
-    df = pd.concat([df1, df2_renamed], ignore_index=True)
-    df = df.drop(columns=[col for col in kolom_tidak_dipakai if col in df.columns])
-    
-    for col in df.select_dtypes(include='object').columns:
-        df[col] = df[col].replace('?', np.nan)
-    
-    df = df.dropna(axis=1)
-    return df
-
 def cleansing(text):
     """
     Membersihkan teks: URL, angka, tanda baca, whitespace.
     """
-    text = re.sub(r'http\S+|www\S+|https\S+', '', text)  # Hapus URL
-    text = re.sub(r'\d+', '', text)                     # Hapus angka
-    text = re.sub(r'[^\w\s]', '', text)                 # Hapus tanda baca
-    text = re.sub(r'[^a-zA-Z\s]', '', text)             # Hapus karakter non-alfabet
-    text = re.sub(r'\s+', ' ', text).strip()            # Hapus spasi berlebih
+    text = re.sub(r'http\S+|www\S+|https\S+', '', text)
+    text = re.sub(r'\d+', '', text)
+    text = re.sub(r'[^\w\s]', '', text)
+    text = re.sub(r'[^a-zA-Z\s]', '', text)
+    text = re.sub(r'\s+', ' ', text).strip()
     return text.lower()
-
-def preprocess_dataframe(df):
-    """
-    Melakukan seluruh proses preprocessing pada dataframe.
-    """
-    df['judul'] = df['judul'].apply(cleansing)
-    df['narasi'] = df['narasi'].apply(cleansing)
-
-    df['judul_token'] = df['judul'].apply(wordpunct_tokenize)  # Ganti jadi wordpunct_tokenize
-    df['narasi_token'] = df['narasi'].apply(wordpunct_tokenize)
-
-    df['T_judul'] = df['judul_token'].apply(remove_stopwords)
-    df['T_konten'] = df['narasi_token'].apply(remove_stopwords)
-
-    df['T_judul'] = df['T_judul'].apply(stemming_tokens)
-    df['T_konten'] = df['T_konten'].apply(stemming_tokens)
-
-    df['T_judul'] = df['T_judul'].apply(lambda tokens: filter_token_length(tokens, 3, 25))
-    df['T_konten'] = df['T_konten'].apply(lambda tokens: filter_token_length(tokens, 3, 25))
-
-    return df
 
 def remove_stopwords(tokens):
     """
@@ -90,10 +47,11 @@ def filter_token_length(tokens, min_len=4, max_len=25):
 
 def preprocess_text(text):
     """
-    Untuk preprocessing teks single (misalnya user input di Streamlit).
+    Preprocessing untuk single text (user input).
+    Output: string hasil preprocessing.
     """
     text = cleansing(text)
-    tokens = wordpunct_tokenize(text)  # Ganti jadi wordpunct_tokenize
+    tokens = word_tokenize(text)
     tokens = remove_stopwords(tokens)
     tokens = stemming_tokens(tokens)
     tokens = filter_token_length(tokens)
