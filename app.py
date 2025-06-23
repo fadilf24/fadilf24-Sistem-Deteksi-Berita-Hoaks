@@ -10,7 +10,7 @@ from interpretation import configure_gemini, analyze_with_gemini
 
 st.set_page_config(page_title="Sistem Deteksi Hoaks")
 
-st.title("📰 Deteksi Berita Hoaks (Naive Bayes + LLM Gemini)")
+st.title("Deteksi Berita Hoaks (Naive Bayes + LLM Gemini)")
 
 # ✅ API Key Gemini (Hanya untuk demo)
 api_key = "AIzaSyDFRv6-gi44fDsJvR_l4E8N2Fxd45oGozU"
