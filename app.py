@@ -1,78 +1,93 @@
 import streamlit as st
 import pandas as pd
-from preprocessing import preprocess_text  # digunakan untuk input teks
+from sklearn.preprocessing import LabelEncoder
+
+from preprocessing import preprocess_text
 from feature_extraction import combine_text_columns, tfidf_transform
 from classification import split_data, train_naive_bayes, predict_naive_bayes
 from evaluation import evaluate_model, generate_classification_report
 from interpretation import configure_gemini, analyze_with_gemini
-from sklearn.preprocessing import LabelEncoder
 
-st.title("Aplikasi Deteksi Berita Hoaks Menggunakan Naive Bayes & LLM (Gemini)")
+st.set_page_config(page_title="Deteksi Hoaks", page_icon="📰")
 
-#  API Key Gemini (JANGAN gunakan langsung di production)
+st.title("📰 Deteksi Berita Hoaks (Naive Bayes + LLM Gemini)")
+
+# ✅ API Key Gemini (Hanya untuk demo)
 api_key = "AIzaSyDFRv6-gi44fDsJvR_l4E8N2Fxd45oGozU"
 
-# Load hasil preprocessing
+# ✅ Load dataset hasil preprocessing
 try:
-    df = pd.read_csv("hasil_preprocessing.csv")
-    st.success("Berhasil memuat data hasil preprocessing!")
+    df_preprocessed = pd.read_csv("hasil_preprocessing.csv")
 except FileNotFoundError:
-    st.error("File hasil_preprocessing.csv tidak ditemukan.")
+    st.error("❌ File 'hasil_preprocessing.csv' tidak ditemukan.")
     st.stop()
 
-# Tampilkan data awal
-st.subheader("Data Setelah Preprocessing (CSV):")
-st.write(df[['T_judul', 'T_konten']].head())
-
-# Gabungkan teks
-df = combine_text_columns(df)
-st.subheader("Gabungan Judul & Konten:")
-st.write(df[['gabungan']].head())
-
-# TF-IDF
-X_features, vectorizer = tfidf_transform(df['gabungan'])
+# ✅ TF-IDF dan pelatihan model
+df_preprocessed = combine_text_columns(df_preprocessed)
+X_features, vectorizer = tfidf_transform(df_preprocessed["gabungan"])
 
 # Encode label
 le = LabelEncoder()
-y = le.fit_transform(df['label'])
+y = le.fit_transform(df_preprocessed["label"])
 
-# Split data
+# Split, train, predict
 X_train, X_test, y_train, y_test = split_data(X_features, y)
-
-# Train & predict
 model = train_naive_bayes(X_train, y_train)
 y_pred = predict_naive_bayes(model, X_test)
 
-# Evaluasi
-metrics = evaluate_model(y_test, y_pred)
-report = generate_classification_report(y_test, y_pred, target_names=le.classes_)
+# ✅ SIDEBAR menu navigasi
+st.sidebar.title("🔧 Menu Navigasi")
+menu = st.sidebar.radio("Pilih Halaman:", ("🏠 Home", "📂 Dataset", "📊 Evaluasi Model"))
 
-st.subheader("Hasil Evaluasi Model:")
-st.json(metrics)
+# ✅ HOME PAGE
+if menu == "🏠 Home":
+    st.subheader("✍️ Masukkan Teks Berita untuk Deteksi:")
 
-st.subheader("Laporan Klasifikasi Lengkap:")
-st.text(report)
+    user_input = st.text_area("Contoh: Pemerintah mengumumkan vaksin palsu beredar di Jakarta...")
 
-# Prediksi teks baru
-st.subheader("Prediksi Berita Baru:")
-user_input = st.text_area("Masukkan teks berita untuk diprediksi:")
+    if st.button("🔍 Prediksi & Interpretasi"):
+        if not user_input.strip():
+            st.warning("Teks tidak boleh kosong.")
+        else:
+            processed = preprocess_text(user_input)
+            input_vector = vectorizer.transform([processed])
+            prediction = predict_naive_bayes(model, input_vector)
+            predicted_label = le.inverse_transform(prediction)[0]
 
-if st.button("Prediksi"):
-    processed_input = preprocess_text(user_input)
-    input_vector = vectorizer.transform([processed_input])
-    prediction = predict_naive_bayes(model, input_vector)
-    predicted_label = le.inverse_transform(prediction)
-    st.success(f"Hasil Prediksi: {predicted_label[0]}")
+            st.success(f"✅ Prediksi: {predicted_label}")
 
-# Interpretasi dengan Gemini
-st.subheader("Interpretasi Pengetahuan dengan LLM (Gemini):")
-user_input_llm = st.text_area("Masukkan teks berita untuk interpretasi LLM:")
+            # Interpretasi LLM
+            try:
+                configure_gemini(api_key)
+                result = analyze_with_gemini(
+                    user_input,
+                    true_label="Unknown",
+                    predicted_label=predicted_label
+                )
+                st.subheader("🧠 Interpretasi LLM (Gemini):")
+                st.text(result)
+            except Exception as e:
+                st.error(f"❌ Error saat menggunakan Gemini: {e}")
 
-if user_input_llm and st.button("Interpretasi dengan Gemini LLM"):
+# ✅ DATASET PAGE
+elif menu == "📂 Dataset":
     try:
-        configure_gemini(api_key)
-        result = analyze_with_gemini(user_input_llm, true_label="Unknown", predicted_label="Unknown")
-        st.success("Hasil Interpretasi LLM:")
-        st.text(result)
-    except Exception as e:
-        st.error(f"Terjadi error saat menggunakan Gemini: {e}")
+        df1 = pd.read_csv("Data_latih.csv")
+        df2 = pd.read_csv("detik_data.csv")
+        st.subheader("📁 Dataset 1 (Data_latih.csv):")
+        st.write(df1.head())
+        st.subheader("📁 Dataset 2 (detik_data.csv):")
+        st.write(df2.head())
+    except:
+        st.warning("File Data_latih.csv atau detik_data.csv tidak ditemukan.")
+
+# ✅ EVALUASI PAGE
+elif menu == "📊 Evaluasi Model":
+    metrics = evaluate_model(y_test, y_pred)
+    report = generate_classification_report(y_test, y_pred, target_names=le.classes_)
+
+    st.subheader("📊 Hasil Evaluasi:")
+    st.json(metrics)
+
+    st.subheader("📝 Laporan Klasifikasi:")
+    st.text(report)
