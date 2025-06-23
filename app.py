@@ -83,15 +83,19 @@ elif menu == " Dataset":
 
 # ✅ EVALUASI PAGE
 elif menu == "Evaluasi Model":
-    metrics = evaluate_model(y_test, y_pred)
-    report = generate_classification_report(y_test, y_pred, target_names=le.classes_)
+    st.subheader("Evaluasi Model Naive Bayes")
 
-    st.subheader("Hasil Evaluasi:")
-    st.json(metrics)
+    if st.button("Tampilkan Evaluasi"):
+        metrics = evaluate_model(y_test, y_pred)
+        report = generate_classification_report(y_test, y_pred, target_names=le.classes_)
 
-    st.subheader("Laporan Klasifikasi:")
-    st.text(report)
+        st.subheader("Hasil Evaluasi:")
+        st.json(metrics)
 
-    st.subheader("Confusion Matrix:")
-    cm_plot = plot_confusion_matrix(y_test, y_pred, labels=le.classes_)
-    st.pyplot(cm_plot)
+        st.subheader("Laporan Klasifikasi:")
+        st.text(report)
+
+        st.subheader("Confusion Matrix:")
+        fig = plot_confusion_matrix(y_test, y_pred, labels=le.classes_)  # Kembalikan figure dari fungsi plot_confusion_matrix
+        st.pyplot(fig)
+
