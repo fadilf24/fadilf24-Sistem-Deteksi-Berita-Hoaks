@@ -5,7 +5,7 @@ from sklearn.preprocessing import LabelEncoder
 from preprocessing import preprocess_text
 from feature_extraction import combine_text_columns, tfidf_transform
 from classification import split_data, train_naive_bayes, predict_naive_bayes
-from evaluation import evaluate_model, generate_classification_report
+from evaluation import evaluate_model, generate_classification_report, plot_confusion_matrix
 from interpretation import configure_gemini, analyze_with_gemini
 
 st.set_page_config(page_title="Sistem Deteksi Hoaks")
@@ -91,3 +91,7 @@ elif menu == "Evaluasi Model":
 
     st.subheader("Laporan Klasifikasi:")
     st.text(report)
+
+    st.subheader("Confusion Matrix:")
+    cm_plot = plot_confusion_matrix(y_test, y_pred, labels=le.classes_)
+    st.pyplot(cm_plot)
