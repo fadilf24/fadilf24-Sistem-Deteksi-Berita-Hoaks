@@ -1,15 +1,16 @@
 import streamlit as st
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
+
 from preprocessing import preprocess_text
 from feature_extraction import combine_text_columns, tfidf_transform
 from classification import split_data, train_naive_bayes, predict_naive_bayes
-from evaluation import evaluate_model, generate_classification_report, plot_confusion_matrix
+from evaluation import evaluate_model, generate_classification_report
 from interpretation import configure_gemini, analyze_with_gemini
 
-st.set_page_config(page_title="Sistem Deteksi Hoaks")
+st.set_page_config(page_title="Deteksi Hoaks", page_icon="📰")
 
-st.title("Deteksi Berita Hoaks (Naive Bayes + LLM Gemini)")
+st.title("📰 Deteksi Berita Hoaks (Naive Bayes + LLM Gemini)")
 
 # ✅ API Key Gemini (Hanya untuk demo)
 api_key = "AIzaSyDFRv6-gi44fDsJvR_l4E8N2Fxd45oGozU"
@@ -18,7 +19,7 @@ api_key = "AIzaSyDFRv6-gi44fDsJvR_l4E8N2Fxd45oGozU"
 try:
     df_preprocessed = pd.read_csv("hasil_preprocessing.csv")
 except FileNotFoundError:
-    st.error(" File 'hasil_preprocessing.csv' tidak ditemukan.")
+    st.error("❌ File 'hasil_preprocessing.csv' tidak ditemukan.")
     st.stop()
 
 # ✅ TF-IDF dan pelatihan model
@@ -36,11 +37,11 @@ y_pred = predict_naive_bayes(model, X_test)
 
 # ✅ SIDEBAR menu navigasi
 st.sidebar.title("🔧 Menu Navigasi")
-menu = st.sidebar.radio("Pilih Halaman:", (" Home", " Dataset", " Evaluasi Model"))
+menu = st.sidebar.radio("Pilih Halaman:", ("🏠 Home", "📂 Dataset", "📊 Evaluasi Model"))
 
 # ✅ HOME PAGE
-if menu == " Home":
-    st.subheader(" Masukkan Teks Berita untuk Deteksi:")
+if menu == "🏠 Home":
+    st.subheader("✍️ Masukkan Teks Berita untuk Deteksi:")
 
     user_input = st.text_area("Contoh: Pemerintah mengumumkan vaksin palsu beredar di Jakarta...")
 
@@ -69,31 +70,24 @@ if menu == " Home":
                 st.error(f"❌ Error saat menggunakan Gemini: {e}")
 
 # ✅ DATASET PAGE
-elif menu == " Dataset":
+elif menu == "📂 Dataset":
     try:
         df1 = pd.read_csv("Data_latih.csv")
         df2 = pd.read_csv("detik_data.csv")
-        st.subheader("Dataset 1 (Data_latih.csv):")
+        st.subheader("📁 Dataset 1 (Data_latih.csv):")
         st.write(df1.head())
-        st.subheader("Dataset 2 (detik_data.csv):")
+        st.subheader("📁 Dataset 2 (detik_data.csv):")
         st.write(df2.head())
     except:
         st.warning("File Data_latih.csv atau detik_data.csv tidak ditemukan.")
 
 # ✅ EVALUASI PAGE
-elif menu == "Evaluasi Model":
-    st.subheader(" Evaluasi Model Naive Bayes")
-
-    # Evaluasi langsung tampil tanpa tombol
+elif menu == "📊 Evaluasi Model":
     metrics = evaluate_model(y_test, y_pred)
     report = generate_classification_report(y_test, y_pred, target_names=le.classes_)
 
-    st.subheader("🔍 Hasil Evaluasi:")
+    st.subheader("📊 Hasil Evaluasi:")
     st.json(metrics)
 
-    st.subheader("📋 Laporan Klasifikasi:")
+    st.subheader("📝 Laporan Klasifikasi:")
     st.text(report)
-
-    st.subheader("📌 Confusion Matrix:")
-    fig = plot_confusion_matrix(y_test, y_pred, labels=le.classes_)
-    st.pyplot(fig)
