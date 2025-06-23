@@ -84,8 +84,6 @@ elif menu == " Dataset":
 elif menu == "Evaluasi Model":
     st.subheader("Evaluasi Model Naive Bayes")
 
-    # tombol selalu aktif
-    if st.button("Tampilkan Evaluasi"):
         metrics = evaluate_model(y_test, y_pred)
         report = generate_classification_report(y_test, y_pred, target_names=le.classes_)
 
