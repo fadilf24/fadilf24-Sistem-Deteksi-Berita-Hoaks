@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.metrics import confusion_matrix
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score,
     classification_report, confusion_matrix
@@ -22,16 +23,14 @@ def generate_classification_report(y_true, y_pred, target_names=None):
     """
     return classification_report(y_true, y_pred, target_names=target_names, zero_division=0)
 
-def plot_confusion_matrix(y_true, y_pred, labels, figsize=(5,4)):
+def plot_confusion_matrix(y_true, y_pred, labels):
     """
-    Menampilkan confusion matrix dalam bentuk heatmap.
+    Plot confusion matrix dengan heatmap.
     """
     cm = confusion_matrix(y_true, y_pred)
-    plt.figure(figsize=figsize)
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
-                xticklabels=labels, yticklabels=labels)
-    plt.xlabel('Predicted')
-    plt.ylabel('Actual')
-    plt.title('Confusion Matrix')
-    plt.tight_layout()
-    return plt
+    fig, ax = plt.subplots(figsize=(5, 4))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=labels, yticklabels=labels, ax=ax)
+    ax.set_xlabel('Predicted Label')
+    ax.set_ylabel('True Label')
+    ax.set_title('Confusion Matrix')
+    return fig
