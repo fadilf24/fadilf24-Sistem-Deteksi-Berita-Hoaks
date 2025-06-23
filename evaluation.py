@@ -24,13 +24,12 @@ def generate_classification_report(y_true, y_pred, target_names=None):
     return classification_report(y_true, y_pred, target_names=target_names, zero_division=0)
 
 def plot_confusion_matrix(y_true, y_pred, labels):
-    """
-    Plot confusion matrix dengan heatmap.
-    """
     cm = confusion_matrix(y_true, y_pred)
     fig, ax = plt.subplots(figsize=(5, 4))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=labels, yticklabels=labels, ax=ax)
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
+                xticklabels=labels, yticklabels=labels, ax=ax)
     ax.set_xlabel('Predicted Label')
     ax.set_ylabel('True Label')
     ax.set_title('Confusion Matrix')
+    plt.tight_layout()
     return fig
