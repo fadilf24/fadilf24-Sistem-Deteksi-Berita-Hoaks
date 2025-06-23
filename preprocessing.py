@@ -1,13 +1,12 @@
 import re
-import nltk
 import pandas as pd
 import numpy as np
-from nltk.tokenize import word_tokenize
+from nltk.tokenize import wordpunct_tokenize  # GANTI tokenizer
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 from Sastrawi.StopWordRemover.StopWordRemoverFactory import StopWordRemoverFactory
 
-# Download tokenizer
-nltk.download('punkt')
+# Tidak perlu download 'punkt' lagi
+# nltk.download('punkt')  # Hapus ini karena Streamlit Cloud tidak support
 
 # Inisialisasi Sastrawi Stopword & Stemmer
 stopword_factory = StopWordRemoverFactory()
@@ -73,9 +72,8 @@ def preprocess_text(text):
     Output: string hasil preprocessing.
     """
     text = cleansing(text)
-    tokens = word_tokenize(text)
+    tokens = wordpunct_tokenize(text)  # Gunakan tokenizer ringan
     tokens = remove_stopwords(tokens)
     tokens = stemming_tokens(tokens)
     tokens = filter_token_length(tokens)
     return ' '.join(tokens)
-
