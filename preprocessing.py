@@ -1,5 +1,7 @@
 import re
 import nltk
+import pandas as pd
+import numpy as np
 from nltk.tokenize import word_tokenize
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 from Sastrawi.StopWordRemover.StopWordRemoverFactory import StopWordRemoverFactory
@@ -45,6 +47,26 @@ def filter_token_length(tokens, min_len=4, max_len=25):
     """
     return [token for token in tokens if min_len <= len(token) <= max_len]
 
+def load_and_clean_data(df1, df2):
+    """
+    Menggabungkan, membersihkan kolom, dan menghapus missing value.
+    """
+    df2_renamed = df2.rename(columns={
+        'Judul': 'judul',
+        'Konten': 'narasi',
+        'Label': 'label'
+    })
+    kolom_tidak_dipakai = ['ID', 'Tanggal', 'tanggal', 'Link', 'nama file gambar']
+    
+    df = pd.concat([df1, df2_renamed], ignore_index=True)
+    df = df.drop(columns=[col for col in kolom_tidak_dipakai if col in df.columns])
+    
+    for col in df.select_dtypes(include='object').columns:
+        df[col] = df[col].replace('?', np.nan)
+    
+    df = df.dropna(axis=1)
+    return df
+
 def preprocess_text(text):
     """
     Preprocessing untuk single text (user input).
@@ -56,3 +78,4 @@ def preprocess_text(text):
     tokens = stemming_tokens(tokens)
     tokens = filter_token_length(tokens)
     return ' '.join(tokens)
+
