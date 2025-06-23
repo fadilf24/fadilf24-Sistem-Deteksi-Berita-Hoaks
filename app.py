@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
-
 from preprocessing import preprocess_text
 from feature_extraction import combine_text_columns, tfidf_transform
 from classification import split_data, train_naive_bayes, predict_naive_bayes
@@ -85,6 +84,7 @@ elif menu == " Dataset":
 elif menu == "Evaluasi Model":
     st.subheader("Evaluasi Model Naive Bayes")
 
+    # tombol selalu aktif
     if st.button("Tampilkan Evaluasi"):
         metrics = evaluate_model(y_test, y_pred)
         report = generate_classification_report(y_test, y_pred, target_names=le.classes_)
@@ -96,6 +96,6 @@ elif menu == "Evaluasi Model":
         st.text(report)
 
         st.subheader("Confusion Matrix:")
-        fig = plot_confusion_matrix(y_test, y_pred, labels=le.classes_)  # Kembalikan figure dari fungsi plot_confusion_matrix
-        st.pyplot(fig)
+        fig = plot_confusion_matrix(y_test, y_pred, labels=le.classes_)  # ✅ pastikan labels sesuai
+        st.pyplot(fig)  # ✅ fig harus di-pyplot, bukan plt langsung
 
