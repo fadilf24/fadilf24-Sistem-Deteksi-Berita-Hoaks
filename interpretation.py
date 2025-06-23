@@ -30,6 +30,6 @@ Berita:
 {text}
 """
 
-    model = genai.GenerativeModel('gemini-1.5-pro')  # pastikan model ini tersedia
+    model = genai.GenerativeModel('gemini-2.0-flash')  # pastikan model ini tersedia
     response = model.generate_content(prompt)
     return response.text
