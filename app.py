@@ -9,10 +9,10 @@ from sklearn.preprocessing import LabelEncoder
 
 st.title("Aplikasi Deteksi Berita Hoaks Menggunakan Naive Bayes & LLM (Gemini)")
 
-# ✅ API Key Gemini (JANGAN gunakan langsung di production)
+#  API Key Gemini (JANGAN gunakan langsung di production)
 api_key = "AIzaSyDFRv6-gi44fDsJvR_l4E8N2Fxd45oGozU"
 
-# ✅ Load hasil preprocessing
+# Load hasil preprocessing
 try:
     df = pd.read_csv("hasil_preprocessing.csv")
     st.success("Berhasil memuat data hasil preprocessing!")
