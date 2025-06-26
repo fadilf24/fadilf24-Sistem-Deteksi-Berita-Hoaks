@@ -16,7 +16,7 @@ st.sidebar.title("🔍 Navigasi")
 menu = st.sidebar.radio("Pilih Halaman:", ("🏠 Deteksi Hoaks", "📂 Dataset", "⚙️ Preprocessing", "📊 Evaluasi Model"))
 
 # ✅ Load dan proses data
-df1 = pd.read_csv("data_latih.csv")
+df1 = pd.read_csv("Data_latih.csv")
 df2 = pd.read_csv("detik_data.csv")
 df = load_and_clean_data(df1, df2)
 df = preprocess_dataframe(df)
