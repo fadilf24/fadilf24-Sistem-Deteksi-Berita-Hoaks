@@ -1,8 +1,24 @@
-streamlit
-pandas
-scikit-learn
-nltk
-Sastrawi
-matplotlib
-seaborn
-google-generativeai
+# Core Streamlit
+streamlit>=1.31.0
+
+# Data handling
+pandas>=1.5.3
+numpy>=1.23.5
+
+# Text processing
+nltk>=3.8.1
+Sastrawi>=1.0.1
+scikit-learn>=1.3.0
+
+# Optional plotting (aktifkan jika memang dipakai)
+matplotlib>=3.7.0
+seaborn>=0.12.2
+
+# Google Gemini API
+google-generativeai>=0.3.2
+
+# Untuk TF-IDF & model
+scipy>=1.10.0
+
+# Jika kamu menggunakan requests atau json manual (bisa hapus kalau tidak)
+requests>=2.31.0
