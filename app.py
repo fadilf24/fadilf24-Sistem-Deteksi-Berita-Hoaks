@@ -9,17 +9,17 @@ from feature_extraction import combine_text_columns, tfidf_transform
 from interpretation import configure_gemini, analyze_with_gemini
 
 st.set_page_config(page_title="Deteksi Berita Hoaks", page_icon="📰")
-st.title("📰 Deteksi Berita Hoaks (Naive Bayes + Gemini LLM)")
+st.title("Deteksi Berita Hoaks (Naive Bayes + Gemini LLM)")
 
 # -----------------------
 # 🔍 Sidebar Navigasi
 # -----------------------
 st.sidebar.title("🔍 Navigasi")
 menu = st.sidebar.radio("Pilih Halaman:", (
-    "🏠 Deteksi Hoaks", 
-    "📂 Dataset", 
-    "⚙️ Preprocessing", 
-    "📊 Evaluasi Model"
+    "Deteksi Hoaks", 
+    "Dataset", 
+    "Preprocessing", 
+    "Evaluasi Model"
 ))
 
 # -----------------------
@@ -62,8 +62,8 @@ model, vectorizer, X_test, y_test, y_pred = extract_features_and_model(df)
 # -----------------------
 # 🏠 Deteksi Hoaks
 # -----------------------
-if menu == "🏠 Deteksi Hoaks":
-    st.subheader("✍️ Masukkan Teks Berita")
+if menu == "Deteksi Hoaks":
+    st.subheader("Masukkan Teks Berita")
     user_input = st.text_area("Contoh: Pemerintah mengumumkan vaksin palsu beredar di Jakarta...")
 
     if st.button("🔍 Prediksi"):
@@ -77,9 +77,9 @@ if menu == "🏠 Deteksi Hoaks":
             label_map = {1: "Hoax", 0: "Non-Hoax"}
             st.success(f"✅ Prediksi: {label_map[prediction]}")
 
-    st.subheader("🧠 Interpretasi dengan Gemini LLM")
+    st.subheader("Interpretasi dengan Gemini LLM")
     user_input_llm = st.text_area("Masukkan teks berita untuk interpretasi:")
-    if st.button("🔎 Interpretasi"):
+    if st.button("Interpretasi"):
         if not user_input_llm.strip():
             st.warning("Teks tidak boleh kosong.")
         else:
@@ -95,31 +95,31 @@ if menu == "🏠 Deteksi Hoaks":
 # -----------------------
 # 📂 Dataset
 # -----------------------
-elif menu == "📂 Dataset":
-    st.subheader("📁 Dataset 1 (Data_latih.csv):")
+elif menu == "Dataset":
+    st.subheader("Dataset Kaggle (Data_latih.csv):")
     st.write(df1.head())
-    st.subheader("📁 Dataset 2 (detik_data.csv):")
+    st.subheader("Dataset Detik.com (detik_data.csv):")
     st.write(df2.head())
-    st.subheader("📁 Dataset Gabungan:")
+    st.subheader("Dataset Gabungan:")
     st.write(df[['T_judul', 'T_konten', 'label']].head())
 
 # -----------------------
 # ⚙️ Preprocessing
 # -----------------------
-elif menu == "⚙️ Preprocessing":
-    st.subheader("🧼 Hasil Preprocessing:")
+elif menu == "Preprocessing":
+    st.subheader("Hasil Preprocessing:")
     st.write(df[['T_judul', 'T_konten']].head())
-    st.subheader("📚 Gabungan Judul + Konten:")
+    st.subheader("Gabungan Judul + Konten:")
     st.write(df[['gabungan']].head())
 
 # -----------------------
 # 📊 Evaluasi Model
 # -----------------------
-elif menu == "📊 Evaluasi Model":
-    st.subheader("📊 Evaluasi Model:")
+elif menu == "Evaluasi Model":
+    st.subheader("Evaluasi Model:")
     acc = accuracy_score(y_test, y_pred)
     st.metric(label="Akurasi", value=f"{acc*100:.2f}%")
 
-    st.subheader("📋 Laporan Klasifikasi:")
+    st.subheader("Laporan Klasifikasi:")
     report = classification_report(y_test, y_pred, target_names=["non-hoaks", "hoaks"])
     st.text(report)
