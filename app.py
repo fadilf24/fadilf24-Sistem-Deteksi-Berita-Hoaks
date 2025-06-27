@@ -8,7 +8,7 @@ from preprocessing import preprocess_text, preprocess_dataframe, load_and_clean_
 from feature_extraction import combine_text_columns, tfidf_transform
 from interpretation import configure_gemini, analyze_with_gemini
 
-st.set_page_config(page_title="Deteksi Berita Hoaks", page_icon="📰")
+st.set_page_config(page_title="Deteksi Berita Hoaks", page_icon="🗰️")
 st.title("Deteksi Berita Hoaks (Naive Bayes + Gemini LLM)")
 
 # -----------------------
@@ -39,8 +39,10 @@ def prepare_data(df1, df2):
     df = combine_text_columns(df)
 
     # Pastikan label diubah jadi angka: 1 = hoaks, 0 = non-hoaks
-    label_map = {"hoaks": 1, "non-hoaks": 0, 1: 1, 0: 0}
+    label_map = {"Hoaks": 1, "Non-Hoax": 0, 1: 1, 0: 0}
     df["label"] = df["label"].map(label_map)
+    df = df[df["label"].notna()]  # Hapus baris dengan label tidak valid
+    df["label"] = df["label"].astype(int)
     return df
 
 @st.cache_data
@@ -55,9 +57,14 @@ def extract_features_and_model(df):
 
     return model, vectorizer, X_test, y_test, y_pred
 
-df1, df2 = load_dataset()
-df = prepare_data(df1, df2)
-model, vectorizer, X_test, y_test, y_pred = extract_features_and_model(df)
+# Inisialisasi data
+try:
+    df1, df2 = load_dataset()
+    df = prepare_data(df1, df2)
+    model, vectorizer, X_test, y_test, y_pred = extract_features_and_model(df)
+except Exception as e:
+    st.error(f"Gagal memuat atau memproses data: {e}")
+    st.stop()
 
 # -----------------------
 # 🏠 Deteksi Hoaks
@@ -121,5 +128,5 @@ elif menu == "Evaluasi Model":
     st.metric(label="Akurasi", value=f"{acc*100:.2f}%")
 
     st.subheader("Laporan Klasifikasi:")
-    report = classification_report(y_test, y_pred, target_names=["non-hoaks", "hoaks"])
+    report = classification_report(y_test, y_pred, target_names=["Non-Hoax", "Hoax"])
     st.text(report)
