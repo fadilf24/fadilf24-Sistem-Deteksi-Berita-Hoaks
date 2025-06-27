@@ -39,7 +39,7 @@ def prepare_data(df1, df2):
     df = combine_text_columns(df)
 
     # Pastikan label diubah jadi angka: 1 = hoaks, 0 = non-hoaks
-    label_map = {"Hoaks": 1, "Non-Hoax": 0, 1: 1, 0: 0}
+    label_map = {"Hoax": 1, "Non-Hoax": 0, 1: 1, 0: 0}
     df["label"] = df["label"].map(label_map)
     df = df[df["label"].notna()]  # Hapus baris dengan label tidak valid
     df["label"] = df["label"].astype(int)
@@ -73,7 +73,7 @@ if menu == "Deteksi Hoaks":
     st.subheader("Masukkan Teks Berita")
     user_input = st.text_area("Contoh: Pemerintah mengumumkan vaksin palsu beredar di Jakarta...")
 
-    if st.button("🔍 Prediksi"):
+    if st.button("Analisis"):
         if not user_input.strip():
             st.warning("Teks tidak boleh kosong.")
         else:
@@ -84,16 +84,10 @@ if menu == "Deteksi Hoaks":
             label_map = {1: "Hoax", 0: "Non-Hoax"}
             st.success(f"✅ Prediksi: {label_map[prediction]}")
 
-    st.subheader("Interpretasi dengan Gemini LLM")
-    user_input_llm = st.text_area("Masukkan teks berita untuk interpretasi:")
-    if st.button("Interpretasi"):
-        if not user_input_llm.strip():
-            st.warning("Teks tidak boleh kosong.")
-        else:
             try:
                 api_key = "AIzaSyDFRv6-gi44fDsJvR_l4E8N2Fxd45oGozU"
                 configure_gemini(api_key)
-                result = analyze_with_gemini(user_input_llm, true_label="Unknown", predicted_label="Unknown")
+                result = analyze_with_gemini(user_input, true_label="Unknown", predicted_label=label_map[prediction])
                 st.success("Hasil Interpretasi LLM:")
                 st.text(result)
             except Exception as e:
