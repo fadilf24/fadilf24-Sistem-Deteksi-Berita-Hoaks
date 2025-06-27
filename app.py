@@ -1,8 +1,11 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import classification_report, accuracy_score
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 from preprocessing import preprocess_text, preprocess_dataframe, load_and_clean_data
 from feature_extraction import combine_text_columns, tfidf_transform
@@ -73,7 +76,7 @@ if menu == "Deteksi Hoaks":
     st.subheader("Masukkan Teks Berita")
     user_input = st.text_area("Contoh: Pemerintah mengumumkan vaksin palsu beredar di Jakarta...")
 
-    if st.button("Analisis"):
+    if st.button("Analisis Berita"):
         if not user_input.strip():
             st.warning("Teks tidak boleh kosong.")
         else:
@@ -124,3 +127,19 @@ elif menu == "Evaluasi Model":
     st.subheader("Laporan Klasifikasi:")
     report = classification_report(y_test, y_pred, target_names=["Non-Hoax", "Hoax"])
     st.text(report)
+
+    st.subheader("📈 Visualisasi Prediksi:")
+    df_eval = pd.DataFrame({"Actual": y_test, "Predicted": y_pred})
+    df_eval["Hasil"] = np.where(df_eval["Actual"] == df_eval["Predicted"], "Benar", "Salah")
+
+    fig, ax = plt.subplots()
+    sns.countplot(data=df_eval, x="Hasil", palette="pastel", ax=ax)
+    ax.set_title("Distribusi Prediksi Benar vs Salah")
+    st.pyplot(fig)
+
+    st.subheader("🔍 Contoh Data Salah Prediksi:")
+    salah = df_eval[df_eval["Hasil"] == "Salah"]
+    if not salah.empty:
+        st.dataframe(salah.head())
+    else:
+        st.success("Semua prediksi benar!")
