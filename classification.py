@@ -20,3 +20,20 @@ def predict_naive_bayes(model, X_test):
     Melakukan prediksi menggunakan model Naive Bayes terlatih.
     """
     return model.predict(X_test)
+def prediction_distribution(y_pred, label_encoder):
+    """
+    Menghitung distribusi prediksi Hoax dan Non-Hoax dalam persen.
+
+    Args:
+        y_pred: array hasil prediksi
+        label_encoder: instance dari LabelEncoder yang telah fit
+    Returns:
+        dict berisi label dan persentase prediksi
+    """
+    unique, counts = np.unique(y_pred, return_counts=True)
+    total = len(y_pred)
+    percentages = {
+        label_encoder.inverse_transform([cls])[0]: round((count / total) * 100, 2)
+        for cls, count in zip(unique, counts)
+    }
+    return percentages
