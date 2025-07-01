@@ -23,13 +23,13 @@ st.set_page_config(page_title="Deteksi Berita Hoaks", page_icon="🔎", layout="
 st.title("Deteksi Berita Hoaks (Naive Bayes + Gemini LLM)")
 
 # -----------------------
-# Sidebar Navigasi menggunakan mui.Stack agar tidak tumpang tindih
+# Sidebar Navigasi menggunakan mui.IconButton (ikon saja)
 # -----------------------
 menu_options = [
-    {"label": "Deteksi Hoaks", "key": "Deteksi Hoaks", "icon": "search"},
-    {"label": "Dataset", "key": "Dataset", "icon": "folder"},
-    {"label": "Preprocessing", "key": "Preprocessing", "icon": "build"},
-    {"label": "Evaluasi Model", "key": "Evaluasi Model", "icon": "bar_chart"},
+    {"label": "Deteksi Hoaks", "key": "Deteksi Hoaks", "icon": "Search"},
+    {"label": "Dataset", "key": "Dataset", "icon": "Folder"},
+    {"label": "Preprocessing", "key": "Preprocessing", "icon": "Build"},
+    {"label": "Evaluasi Model", "key": "Evaluasi Model", "icon": "BarChart"},
 ]
 
 if "selected" not in st.session_state:
@@ -39,21 +39,13 @@ with elements("sidebar"):
     mui.Stack(
         spacing=2,
         direction="column",
-        sx={"width": "200px", "padding": "1rem"},
+        sx={"width": "60px", "padding": "1rem"},
         children=[
-            mui.Button(
-                mui.Stack(
-                    direction="row",
-                    alignItems="center",
-                    spacing=1,
-                    children=[
-                        mui.Icon(option["icon"]),
-                        mui.Typography(option["label"])
-                    ]
-                ),
-                fullWidth=True,
-                variant="outlined",
-                onClick=lambda label=option["key"]: st.session_state.update({"selected": label})
+            mui.IconButton(
+                mui.Icon(option["icon"]),
+                color="primary" if st.session_state.selected == option["key"] else "default",
+                onClick=lambda label=option["key"]: st.session_state.update({"selected": label}),
+                title=option["label"]
             )
             for option in menu_options
         ]
@@ -203,7 +195,7 @@ elif menu == "Evaluasi Model":
     )
     st.text(report)
 
-    st.subheader("Visualisasi Prediksi:")
+    st.subheader("Visualisasi Prediksi (Pie Chart):")
     df_eval = pd.DataFrame({"Actual": y_test, "Predicted": y_pred})
     df_eval["Hasil"] = np.where(df_eval["Actual"] == df_eval["Predicted"], "Benar", "Salah")
     hasil_count = df_eval["Hasil"].value_counts()
