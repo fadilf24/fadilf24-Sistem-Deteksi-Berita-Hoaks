@@ -10,8 +10,7 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import classification_report, accuracy_score
 import matplotlib.pyplot as plt
 import seaborn as sns
-from streamlit_elements import elements, mui, sync
-import streamlit_elements.mui.icons.material as icon
+from streamlit_elements import elements, mui, sync, icon
 
 from preprocessing import preprocess_text, preprocess_dataframe, load_and_clean_data
 from feature_extraction import combine_text_columns, tfidf_transform
@@ -24,7 +23,7 @@ st.set_page_config(page_title="Deteksi Berita Hoaks", page_icon="🔎", layout="
 st.title("Deteksi Berita Hoaks (Naive Bayes + Gemini LLM)")
 
 # -----------------------
-# Sidebar Navigasi Collapse/Expand
+# Sidebar Navigasi Collapse/Expand dengan Ikon
 # -----------------------
 menu_options = [
     {"label": "Deteksi Hoaks", "key": "Deteksi Hoaks", "icon": icon.Search},
@@ -41,22 +40,23 @@ if "sidebar_expanded" not in st.session_state:
 with elements("sidebar"):
     with mui.Box(sx={"height": "100vh", "backgroundColor": "#0e1117"}):
         with mui.Stack(spacing=1, direction="column", sx={"p": 1, "alignItems": "center"}):
-            mui.IconButton(
-                icon.Menu() if not st.session_state.sidebar_expanded else icon.Close(),
-                color="primary",
+            mui.Button(
+                "🔽" if st.session_state.sidebar_expanded else "☰",
                 onClick=lambda: st.session_state.update({"sidebar_expanded": not st.session_state.sidebar_expanded}),
-                title="Toggle Sidebar"
+                color="primary",
+                variant="contained",
+                size="small"
             )
             for option in menu_options:
-                with mui.Box(sx={"textAlign": "center"}):
-                    mui.IconButton(
-                        option["icon"](),
-                        color="primary" if st.session_state.selected == option["key"] else "default",
-                        onClick=lambda label=option["key"]: st.session_state.update({"selected": label}),
-                        title=option["label"]
-                    )
-                    if st.session_state.sidebar_expanded:
-                        mui.Typography(option["label"], variant="caption", sx={"color": "white"})
+                mui.Button(
+                    option["label"] if st.session_state.sidebar_expanded else "",
+                    startIcon=option["icon"](),
+                    onClick=lambda label=option["key"]: st.session_state.update({"selected": label}),
+                    color="primary" if st.session_state.selected == option["key"] else "secondary",
+                    variant="outlined",
+                    size="small",
+                    fullWidth=st.session_state.sidebar_expanded
+                )
 
 menu = st.session_state.get("selected", "Deteksi Hoaks")
 
@@ -129,7 +129,7 @@ if menu == "Deteksi Hoaks":
             probas = model.predict_proba(vectorized)[0]
             class_labels = ["Non-Hoax", "Hoax"]
 
-            st.subheader("Keyakinan Model:")
+            st.subheader("Keyakinan Model :")
             fig1, ax1 = plt.subplots()
             ax1.pie(probas, labels=class_labels, autopct='%1.1f%%', startangle=90)
             ax1.axis('equal')
