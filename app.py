@@ -17,7 +17,7 @@ from interpretation import configure_gemini, analyze_with_gemini
 # 🛠️ Konfigurasi Aplikasi
 # -----------------------
 st.set_page_config(page_title="Deteksi Berita Hoaks", page_icon="🕵️", layout="wide")
-st.title("🗞️ Deteksi Berita Hoaks (Naive Bayes + Gemini LLM)")
+st.title("📜️ Deteksi Berita Hoaks (Naive Bayes + Gemini LLM)")
 
 # -----------------------
 # 🔍 Sidebar Navigasi Ikonik
@@ -98,7 +98,7 @@ if menu == "Deteksi Hoaks":
 
             # Interpretasi dengan Gemini
             try:
-                api_key = "AIzaSyDFRv6-gi44fDsJvR_l4E8N2Fxd45oGozU"  # aman simpan di secrets
+                api_key = st.secrets["GEMINI_API_KEY"]  # Simpan aman di secrets.toml
                 with st.spinner("Menghasilkan interpretasi dengan Gemini..."):
                     configure_gemini(api_key)
                     result = analyze_with_gemini(
@@ -137,7 +137,7 @@ elif menu == "Dataset":
     st.dataframe(df1.head())
     st.subheader("📰 Dataset Detik.com (detik_data.csv):")
     st.dataframe(df2.head())
-    st.subheader("🧩 Dataset Gabungan:")
+    st.subheader("🧹 Dataset Gabungan:")
     st.dataframe(df[["T_judul", "T_konten", "label"]].head())
 
 # -----------------------
@@ -155,7 +155,7 @@ elif menu == "Preprocessing":
 elif menu == "Evaluasi Model":
     st.subheader("📊 Evaluasi Model Naive Bayes")
     acc = accuracy_score(y_test, y_pred)
-    st.metric(label="🎯 Akurasi", value=f"{acc*100:.2f}%")
+    st.metric(label="🌟 Akurasi", value=f"{acc*100:.2f}%")
 
     st.subheader("📋 Laporan Klasifikasi:")
     report = classification_report(
