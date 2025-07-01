@@ -1,6 +1,7 @@
 # Core Streamlit
 streamlit>=1.31.0
 streamlit-option-menu
+streamlit-elements
 # Data handling
 pandas>=1.5.3
 numpy>=1.23.5
