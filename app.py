@@ -33,9 +33,15 @@ layout = [
     dashboard.Item(f"item{i}", 0, i, 1, 1) for i in range(len(menu_options))
 ]
 
+if "selected" not in st.session_state:
+    st.session_state["selected"] = "Deteksi Hoaks"
+
 with elements("sidebar"):
     with dashboard.Grid(layout=layout, columns=1, rowHeight=80, width=200):
         for i, option in enumerate(menu_options):
+            def handle_click(label=option["key"]):
+                st.session_state.selected = label
+
             mui.Button(
                 mui.Stack(
                     direction="row",
@@ -47,14 +53,12 @@ with elements("sidebar"):
                     ]
                 ),
                 fullWidth=True,
-                onClick=dashboard.Events().set("selected", option["key"]),
+                onClick=handle_click,
                 variant="outlined",
                 color="primary"
             )
 
-    if "selected" not in st.session_state:
-        st.session_state["selected"] = "Deteksi Hoaks"
-    menu = st.session_state.get("selected", "Deteksi Hoaks")
+menu = st.session_state.get("selected", "Deteksi Hoaks")
 
 # -----------------------
 # 📂 Load & Preprocess Data
