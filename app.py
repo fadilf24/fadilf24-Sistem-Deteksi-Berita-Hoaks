@@ -10,7 +10,8 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import classification_report, accuracy_score
 import matplotlib.pyplot as plt
 import seaborn as sns
-from streamlit_elements import elements, mui
+from streamlit_elements import elements, mui, sync
+from streamlit_elements.mui.icons import material as icon
 
 from preprocessing import preprocess_text, preprocess_dataframe, load_and_clean_data
 from feature_extraction import combine_text_columns, tfidf_transform
@@ -23,33 +24,39 @@ st.set_page_config(page_title="Deteksi Berita Hoaks", page_icon="🔎", layout="
 st.title("Deteksi Berita Hoaks (Naive Bayes + Gemini LLM)")
 
 # -----------------------
-# Sidebar Navigasi menggunakan mui.IconButton (ikon saja)
+# Sidebar Navigasi Collapse/Expand
 # -----------------------
 menu_options = [
-    {"label": "Deteksi Hoaks", "key": "Deteksi Hoaks", "icon": "Search"},
-    {"label": "Dataset", "key": "Dataset", "icon": "Folder"},
-    {"label": "Preprocessing", "key": "Preprocessing", "icon": "Build"},
-    {"label": "Evaluasi Model", "key": "Evaluasi Model", "icon": "BarChart"},
+    {"label": "Deteksi Hoaks", "key": "Deteksi Hoaks", "icon": icon.Search},
+    {"label": "Dataset", "key": "Dataset", "icon": icon.Folder},
+    {"label": "Preprocessing", "key": "Preprocessing", "icon": icon.Build},
+    {"label": "Evaluasi Model", "key": "Evaluasi Model", "icon": icon.BarChart},
 ]
 
 if "selected" not in st.session_state:
     st.session_state.selected = "Deteksi Hoaks"
+if "sidebar_expanded" not in st.session_state:
+    st.session_state.sidebar_expanded = True
 
 with elements("sidebar"):
-    mui.Stack(
-        spacing=2,
-        direction="column",
-        sx={"width": "60px", "padding": "1rem"},
-        children=[
+    with mui.Box(sx={"height": "100vh", "backgroundColor": "#0e1117"}):
+        with mui.Stack(spacing=1, direction="column", sx={"p": 1, "alignItems": "center"}):
             mui.IconButton(
-                mui.Icon(option["icon"]),
-                color="primary" if st.session_state.selected == option["key"] else "default",
-                onClick=lambda label=option["key"]: st.session_state.update({"selected": label}),
-                title=option["label"]
+                icon.Menu() if not st.session_state.sidebar_expanded else icon.Close(),
+                color="primary",
+                onClick=lambda: st.session_state.update({"sidebar_expanded": not st.session_state.sidebar_expanded}),
+                title="Toggle Sidebar"
             )
-            for option in menu_options
-        ]
-    )
+            for option in menu_options:
+                with mui.Box(sx={"textAlign": "center"}):
+                    mui.IconButton(
+                        option["icon"](),
+                        color="primary" if st.session_state.selected == option["key"] else "default",
+                        onClick=lambda label=option["key"]: st.session_state.update({"selected": label}),
+                        title=option["label"]
+                    )
+                    if st.session_state.sidebar_expanded:
+                        mui.Typography(option["label"], variant="caption", sx={"color": "white"})
 
 menu = st.session_state.get("selected", "Deteksi Hoaks")
 
@@ -195,7 +202,7 @@ elif menu == "Evaluasi Model":
     )
     st.text(report)
 
-    st.subheader("Visualisasi Prediksi (Pie Chart):")
+    st.subheader("Visualisasi Prediksi :")
     df_eval = pd.DataFrame({"Actual": y_test, "Predicted": y_pred})
     df_eval["Hasil"] = np.where(df_eval["Actual"] == df_eval["Predicted"], "Benar", "Salah")
     hasil_count = df_eval["Hasil"].value_counts()
