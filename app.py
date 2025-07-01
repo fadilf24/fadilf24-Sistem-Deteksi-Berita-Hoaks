@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings("ignore", category=SyntaxWarning)
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -30,14 +33,14 @@ menu_options = [
 ]
 
 layout = [
-    dashboard.Item(f"item{i}", 0, i, 1, 1) for i in range(len(menu_options))
+    dashboard.Item(f"item{i}", 0, i * 2, 1, 1) for i in range(len(menu_options))
 ]
 
 if "selected" not in st.session_state:
     st.session_state["selected"] = "Deteksi Hoaks"
 
 with elements("sidebar"):
-    with dashboard.Grid(layout=layout, columns=1, rowHeight=80, width=200):
+    with dashboard.Grid(layout=layout, columns=1, rowHeight=80, width=220):
         for i, option in enumerate(menu_options):
             def handle_click(label=option["key"]):
                 st.session_state.selected = label
