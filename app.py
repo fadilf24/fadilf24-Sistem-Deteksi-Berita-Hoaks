@@ -7,43 +7,48 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import classification_report, accuracy_score
 import matplotlib.pyplot as plt
 import seaborn as sns
-from streamlit_elements import elements, dashboard, mui, html, mui_icons_material as icons
+from streamlit_elements import elements, dashboard, mui, html
 
 from preprocessing import preprocess_text, preprocess_dataframe, load_and_clean_data
 from feature_extraction import combine_text_columns, tfidf_transform
 from interpretation import configure_gemini, analyze_with_gemini
 
 # -----------------------
-# 🛠️ Konfigurasi Aplikasi
+# 💠 Konfigurasi Aplikasi
 # -----------------------
 st.set_page_config(page_title="Deteksi Berita Hoaks", page_icon="🕵️", layout="wide")
 st.title("📜️ Deteksi Berita Hoaks (Naive Bayes + Gemini LLM)")
 
 # -----------------------
-# 🔍 Sidebar Navigasi dengan streamlit-elements + ikon
+# 🔍 Sidebar Navigasi dengan streamlit-elements + icon emoji
 # -----------------------
-menu_options = {
-    "Deteksi Hoaks": icons.Search,
-    "Dataset": icons.Folder,
-    "Preprocessing": icons.Build,
-    "Evaluasi Model": icons.BarChart
-}
+menu_options = [
+    {"label": "Deteksi Hoaks", "key": "Deteksi Hoaks", "icon": "search"},
+    {"label": "Dataset", "key": "Dataset", "icon": "folder"},
+    {"label": "Preprocessing", "key": "Preprocessing", "icon": "build"},
+    {"label": "Evaluasi Model", "key": "Evaluasi Model", "icon": "bar_chart"},
+]
 
 with elements("sidebar"):
     with dashboard.Grid(columns=1, rows=len(menu_options), gap=1):
         selected = None
-        for i, (label, icon) in enumerate(menu_options.items()):
+        for i, option in enumerate(menu_options):
             with dashboard.Item(f"item{i}", i, 0, 1, 1):
-                btn = mui.Button(
-                    icon(icon),
-                    label,
+                mui.Button(
+                    mui.Stack(
+                        direction="row",
+                        alignItems="center",
+                        spacing=1,
+                        children=[
+                            mui.Icon(option["icon"]),
+                            mui.Typography(option["label"])
+                        ]
+                    ),
                     fullWidth=True,
-                    startIcon=icon()
+                    onClick=dashboard.Events().set("selected", option["key"])
                 )
-                if btn.props("onClick"):
-                    selected = label
 
-menu = selected or "Deteksi Hoaks"
+    menu = st.session_state.get("selected", "Deteksi Hoaks")
 
 # -----------------------
 # 📂 Load & Preprocess Data
@@ -118,7 +123,7 @@ if menu == "Deteksi Hoaks":
                     result = analyze_with_gemini(
                         user_input, true_label="Unknown", predicted_label=pred_label
                     )
-                st.markdown("### 📘 Hasil Interpretasi LLM:")
+                st.markdown("### 📜 Hasil Interpretasi LLM:")
                 st.text(result)
             except Exception as e:
                 result = "Gagal interpretasi"
