@@ -3,6 +3,7 @@ streamlit>=1.31.0
 
 # UI Enhancement
 streamlit-elements>=0.1.0
+streamlit_elements.mui.icons
 streamlit-option-menu>=0.3.6  # Optional, kalau masih dipakai di file lain
 
 # Data Handling
