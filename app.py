@@ -7,7 +7,7 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import classification_report, accuracy_score
 import matplotlib.pyplot as plt
 import seaborn as sns
-from streamlit_option_menu import option_menu
+from streamlit_elements import elements, dashboard, mui, html, mui_icons_material as icons
 
 from preprocessing import preprocess_text, preprocess_dataframe, load_and_clean_data
 from feature_extraction import combine_text_columns, tfidf_transform
@@ -20,16 +20,30 @@ st.set_page_config(page_title="Deteksi Berita Hoaks", page_icon="🕵️", layou
 st.title("📜️ Deteksi Berita Hoaks (Naive Bayes + Gemini LLM)")
 
 # -----------------------
-# 🔍 Sidebar Navigasi Ikonik
+# 🔍 Sidebar Navigasi dengan streamlit-elements + ikon
 # -----------------------
-with st.sidebar:
-    menu = option_menu(
-        menu_title=None,
-        options=["Deteksi Hoaks", "Dataset", "Preprocessing", "Evaluasi Model"],
-        icons=["search", "folder", "tools", "bar-chart"],
-        default_index=0,
-        orientation="vertical",
-    )
+menu_options = {
+    "Deteksi Hoaks": icons.Search,
+    "Dataset": icons.Folder,
+    "Preprocessing": icons.Build,
+    "Evaluasi Model": icons.BarChart
+}
+
+with elements("sidebar"):
+    with dashboard.Grid(columns=1, rows=len(menu_options), gap=1):
+        selected = None
+        for i, (label, icon) in enumerate(menu_options.items()):
+            with dashboard.Item(f"item{i}", i, 0, 1, 1):
+                btn = mui.Button(
+                    icon(icon),
+                    label,
+                    fullWidth=True,
+                    startIcon=icon()
+                )
+                if btn.props("onClick"):
+                    selected = label
+
+menu = selected or "Deteksi Hoaks"
 
 # -----------------------
 # 📂 Load & Preprocess Data
@@ -98,7 +112,7 @@ if menu == "Deteksi Hoaks":
 
             # Interpretasi dengan Gemini
             try:
-                api_key = st.secrets["GEMINI_API_KEY"]  # Simpan aman di secrets.toml
+                api_key = st.secrets["GEMINI_API_KEY"]
                 with st.spinner("Menghasilkan interpretasi dengan Gemini..."):
                     configure_gemini(api_key)
                     result = analyze_with_gemini(
