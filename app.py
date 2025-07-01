@@ -10,7 +10,7 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import classification_report, accuracy_score
 import matplotlib.pyplot as plt
 import seaborn as sns
-from streamlit_elements import elements, mui, sync, icon
+from streamlit_elements import elements, mui, sync
 
 from preprocessing import preprocess_text, preprocess_dataframe, load_and_clean_data
 from feature_extraction import combine_text_columns, tfidf_transform
@@ -23,13 +23,13 @@ st.set_page_config(page_title="Deteksi Berita Hoaks", page_icon="🔎", layout="
 st.title("Deteksi Berita Hoaks (Naive Bayes + Gemini LLM)")
 
 # -----------------------
-# Sidebar Navigasi Collapse/Expand dengan Ikon
+# Sidebar Navigasi Collapse/Expand dengan Label
 # -----------------------
 menu_options = [
-    {"label": "Deteksi Hoaks", "key": "Deteksi Hoaks", "icon": icon.Search},
-    {"label": "Dataset", "key": "Dataset", "icon": icon.Folder},
-    {"label": "Preprocessing", "key": "Preprocessing", "icon": icon.Build},
-    {"label": "Evaluasi Model", "key": "Evaluasi Model", "icon": icon.BarChart},
+    {"label": "Deteksi Hoaks", "key": "Deteksi Hoaks"},
+    {"label": "Dataset", "key": "Dataset"},
+    {"label": "Preprocessing", "key": "Preprocessing"},
+    {"label": "Evaluasi Model", "key": "Evaluasi Model"},
 ]
 
 if "selected" not in st.session_state:
@@ -49,8 +49,7 @@ with elements("sidebar"):
             )
             for option in menu_options:
                 mui.Button(
-                    option["label"] if st.session_state.sidebar_expanded else "",
-                    startIcon=option["icon"](),
+                    option["label"] if st.session_state.sidebar_expanded else option["label"][0],
                     onClick=lambda label=option["key"]: st.session_state.update({"selected": label}),
                     color="primary" if st.session_state.selected == option["key"] else "secondary",
                     variant="outlined",
@@ -129,7 +128,7 @@ if menu == "Deteksi Hoaks":
             probas = model.predict_proba(vectorized)[0]
             class_labels = ["Non-Hoax", "Hoax"]
 
-            st.subheader("Keyakinan Model :")
+            st.subheader("Keyakinan Model (Pie Chart):")
             fig1, ax1 = plt.subplots()
             ax1.pie(probas, labels=class_labels, autopct='%1.1f%%', startangle=90)
             ax1.axis('equal')
