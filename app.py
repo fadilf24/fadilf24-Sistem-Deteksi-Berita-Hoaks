@@ -14,13 +14,13 @@ from feature_extraction import combine_text_columns, tfidf_transform
 from interpretation import configure_gemini, analyze_with_gemini
 
 # -----------------------
-# 💠 Konfigurasi Aplikasi
+# Konfigurasi Aplikasi
 # -----------------------
-st.set_page_config(page_title="Deteksi Berita Hoaks", page_icon="🕵️", layout="wide")
-st.title("📜️ Deteksi Berita Hoaks (Naive Bayes + Gemini LLM)")
+st.set_page_config(page_title="Deteksi Berita Hoaks", page_icon="🔎", layout="wide")
+st.title("Deteksi Berita Hoaks (Naive Bayes + Gemini LLM)")
 
 # -----------------------
-# 🔍 Sidebar Navigasi dengan streamlit-elements + icon emoji
+# Sidebar Navigasi dengan streamlit-elements + icon material
 # -----------------------
 menu_options = [
     {"label": "Deteksi Hoaks", "key": "Deteksi Hoaks", "icon": "search"},
@@ -61,7 +61,7 @@ with elements("sidebar"):
 menu = st.session_state.get("selected", "Deteksi Hoaks")
 
 # -----------------------
-# 📂 Load & Preprocess Data
+# Load & Preprocess Data
 # -----------------------
 @st.cache_data
 def load_dataset():
@@ -93,18 +93,18 @@ def extract_features_and_model(df):
     return model, vectorizer, X_test, y_test, y_pred
 
 # -----------------------
-# 🚀 Inisialisasi
+# Inisialisasi
 # -----------------------
 try:
     df1, df2 = load_dataset()
     df = prepare_data(df1, df2)
     model, vectorizer, X_test, y_test, y_pred = extract_features_and_model(df)
 except Exception as e:
-    st.error(f"❌ Gagal memuat atau memproses data:\n{e}")
+    st.error(f"Gagal memuat atau memproses data:\n{e}")
     st.stop()
 
 # -----------------------
-# 🏠 Halaman: Deteksi Hoaks
+# Halaman: Deteksi Hoaks
 # -----------------------
 if menu == "Deteksi Hoaks":
     st.subheader("Masukkan Teks Berita:")
@@ -112,9 +112,9 @@ if menu == "Deteksi Hoaks":
         "Contoh: Pemerintah mengumumkan vaksin palsu beredar di Jakarta...", height=200
     )
 
-    if st.button("🔍 Analisis Berita"):
+    if st.button("Analisis Berita"):
         if not user_input.strip():
-            st.warning("⚠️ Teks tidak boleh kosong.")
+            st.warning("Teks tidak boleh kosong.")
         else:
             with st.spinner("Memproses teks dan memprediksi..."):
                 processed = preprocess_text(user_input)
@@ -123,7 +123,17 @@ if menu == "Deteksi Hoaks":
                 label_map = {1: "Hoax", 0: "Non-Hoax"}
                 pred_label = label_map[prediction]
 
-            st.success(f"✅ Prediksi: {pred_label}")
+            st.success(f"Prediksi: {pred_label}")
+
+            # Probabilitas Model (Pie Chart)
+            probas = model.predict_proba(vectorized)[0]
+            class_labels = ["Non-Hoax", "Hoax"]
+
+            st.subheader("Keyakinan Model (Pie Chart):")
+            fig1, ax1 = plt.subplots()
+            ax1.pie(probas, labels=class_labels, autopct='%1.1f%%', startangle=90)
+            ax1.axis('equal')
+            st.pyplot(fig1)
 
             # Interpretasi dengan Gemini
             try:
@@ -133,11 +143,11 @@ if menu == "Deteksi Hoaks":
                     result = analyze_with_gemini(
                         user_input, true_label="Unknown", predicted_label=pred_label
                     )
-                st.markdown("### 📜 Hasil Interpretasi LLM:")
+                st.markdown("### Hasil Interpretasi LLM:")
                 st.text(result)
             except Exception as e:
                 result = "Gagal interpretasi"
-                st.error(f"❌ Gagal menghasilkan interpretasi LLM:\n{e}")
+                st.error(f"Gagal menghasilkan interpretasi LLM:\n{e}")
 
             # Simpan ke CSV
             hasil_baru = pd.DataFrame([{
@@ -154,45 +164,45 @@ if menu == "Deteksi Hoaks":
                     index=False,
                     header=not os.path.exists("hasil_prediksi.csv")
                 )
-                st.success("📝 Hasil prediksi disimpan ke `hasil_prediksi.csv`")
+                st.success("Hasil prediksi disimpan ke `hasil_prediksi.csv`")
             except Exception as e:
                 st.warning(f"Gagal menyimpan hasil: {e}")
 
 # -----------------------
-# 📂 Halaman: Dataset
+# Halaman: Dataset
 # -----------------------
 elif menu == "Dataset":
-    st.subheader("📄 Dataset Kaggle (Data_latih.csv):")
+    st.subheader("Dataset Kaggle (Data_latih.csv):")
     st.dataframe(df1.head())
-    st.subheader("📰 Dataset Detik.com (detik_data.csv):")
+    st.subheader("Dataset Detik.com (detik_data.csv):")
     st.dataframe(df2.head())
-    st.subheader("🧹 Dataset Gabungan:")
+    st.subheader("Dataset Gabungan:")
     st.dataframe(df[["T_judul", "T_konten", "label"]].head())
 
 # -----------------------
-# ⚙️ Halaman: Preprocessing
+# Halaman: Preprocessing
 # -----------------------
 elif menu == "Preprocessing":
-    st.subheader("🧼 Hasil Preprocessing:")
+    st.subheader("Hasil Preprocessing:")
     st.dataframe(df[["T_judul", "T_konten"]].head())
-    st.subheader("🔗 Gabungan Judul + Konten:")
+    st.subheader("Gabungan Judul + Konten:")
     st.dataframe(df[["gabungan"]].head())
 
 # -----------------------
-# 📊 Halaman: Evaluasi Model
+# Halaman: Evaluasi Model
 # -----------------------
 elif menu == "Evaluasi Model":
-    st.subheader("📊 Evaluasi Model Naive Bayes")
+    st.subheader("Evaluasi Model Naive Bayes")
     acc = accuracy_score(y_test, y_pred)
-    st.metric(label="🌟 Akurasi", value=f"{acc*100:.2f}%")
+    st.metric(label="Akurasi", value=f"{acc*100:.2f}%")
 
-    st.subheader("📋 Laporan Klasifikasi:")
+    st.subheader("Laporan Klasifikasi:")
     report = classification_report(
         y_test, y_pred, target_names=["Non-Hoax", "Hoax"]
     )
     st.text(report)
 
-    st.subheader("📈 Visualisasi Prediksi (Pie Chart):")
+    st.subheader("Visualisasi Prediksi (Pie Chart):")
     df_eval = pd.DataFrame({"Actual": y_test, "Predicted": y_pred})
     df_eval["Hasil"] = np.where(df_eval["Actual"] == df_eval["Predicted"], "Benar", "Salah")
     hasil_count = df_eval["Hasil"].value_counts()
@@ -204,9 +214,9 @@ elif menu == "Evaluasi Model":
     ax.axis("equal")
     st.pyplot(fig)
 
-    st.subheader("🔍 Contoh Data Salah Prediksi:")
+    st.subheader("Contoh Data Salah Prediksi:")
     salah = df_eval[df_eval["Hasil"] == "Salah"]
     if not salah.empty:
         st.dataframe(salah.head())
     else:
-        st.success("🎉 Semua prediksi benar!")
+        st.success("Semua prediksi benar!")
