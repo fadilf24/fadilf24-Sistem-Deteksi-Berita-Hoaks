@@ -29,25 +29,31 @@ menu_options = [
     {"label": "Evaluasi Model", "key": "Evaluasi Model", "icon": "bar_chart"},
 ]
 
-with elements("sidebar"):
-    with dashboard.Grid(columns=1, rows=len(menu_options), gap=1):
-        selected = None
-        for i, option in enumerate(menu_options):
-            with dashboard.Item(f"item{i}", i, 0, 1, 1):
-                mui.Button(
-                    mui.Stack(
-                        direction="row",
-                        alignItems="center",
-                        spacing=1,
-                        children=[
-                            mui.Icon(option["icon"]),
-                            mui.Typography(option["label"])
-                        ]
-                    ),
-                    fullWidth=True,
-                    onClick=dashboard.Events().set("selected", option["key"])
-                )
+layout = [
+    dashboard.Item(f"item{i}", 0, i, 1, 1) for i in range(len(menu_options))
+]
 
+with elements("sidebar"):
+    with dashboard.Grid(layout=layout, columns=1, rowHeight=80, width=200):
+        for i, option in enumerate(menu_options):
+            mui.Button(
+                mui.Stack(
+                    direction="row",
+                    alignItems="center",
+                    spacing=1,
+                    children=[
+                        mui.Icon(option["icon"]),
+                        mui.Typography(option["label"])
+                    ]
+                ),
+                fullWidth=True,
+                onClick=dashboard.Events().set("selected", option["key"]),
+                variant="outlined",
+                color="primary"
+            )
+
+    if "selected" not in st.session_state:
+        st.session_state["selected"] = "Deteksi Hoaks"
     menu = st.session_state.get("selected", "Deteksi Hoaks")
 
 # -----------------------
