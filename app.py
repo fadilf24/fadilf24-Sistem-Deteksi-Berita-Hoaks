@@ -11,7 +11,7 @@ from sklearn.metrics import classification_report, accuracy_score
 import matplotlib.pyplot as plt
 import seaborn as sns
 from streamlit_elements import elements, mui, sync
-from streamlit_elements.mui.icons import material as icon
+import streamlit_elements.mui.icons.material as icon
 
 from preprocessing import preprocess_text, preprocess_dataframe, load_and_clean_data
 from feature_extraction import combine_text_columns, tfidf_transform
@@ -129,7 +129,7 @@ if menu == "Deteksi Hoaks":
             probas = model.predict_proba(vectorized)[0]
             class_labels = ["Non-Hoax", "Hoax"]
 
-            st.subheader("Keyakinan Model (Pie Chart):")
+            st.subheader("Keyakinan Model:")
             fig1, ax1 = plt.subplots()
             ax1.pie(probas, labels=class_labels, autopct='%1.1f%%', startangle=90)
             ax1.axis('equal')
@@ -202,7 +202,7 @@ elif menu == "Evaluasi Model":
     )
     st.text(report)
 
-    st.subheader("Visualisasi Prediksi :")
+    st.subheader("Visualisasi Prediksi (Pie Chart):")
     df_eval = pd.DataFrame({"Actual": y_test, "Predicted": y_pred})
     df_eval["Hasil"] = np.where(df_eval["Actual"] == df_eval["Predicted"], "Benar", "Salah")
     hasil_count = df_eval["Hasil"].value_counts()
