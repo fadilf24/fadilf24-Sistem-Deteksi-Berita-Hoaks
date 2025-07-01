@@ -6,25 +6,29 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import classification_report, accuracy_score
 import matplotlib.pyplot as plt
 import seaborn as sns
+from streamlit_option_menu import option_menu  # NEW
 
 from preprocessing import preprocess_text, preprocess_dataframe, load_and_clean_data
 from feature_extraction import combine_text_columns, tfidf_transform
 from interpretation import configure_gemini, analyze_with_gemini
 
-# Konfigurasi halaman Streamlit
+# -----------------------
+# 🛠️ Konfigurasi Aplikasi
+# -----------------------
 st.set_page_config(page_title="Deteksi Berita Hoaks", page_icon="🕵️", layout="wide")
 st.title("🗞️ Deteksi Berita Hoaks (Naive Bayes + Gemini LLM)")
 
 # -----------------------
-# 🔍 Sidebar Navigasi
+# 🔍 Sidebar Navigasi Ikonik
 # -----------------------
-st.sidebar.title("🔍 Navigasi")
-menu = st.sidebar.radio("Pilih Halaman:", (
-    "Deteksi Hoaks", 
-    "Dataset", 
-    "Preprocessing", 
-    "Evaluasi Model"
-))
+with st.sidebar:
+    menu = option_menu(
+        menu_title=None,
+        options=["Deteksi Hoaks", "Dataset", "Preprocessing", "Evaluasi Model"],
+        icons=["search", "folder", "tools", "bar-chart"],
+        default_index=0,
+        orientation="vertical",
+    )
 
 # -----------------------
 # 📂 Load & Preprocess Data
@@ -40,7 +44,6 @@ def prepare_data(df1, df2):
     df = load_and_clean_data(df1, df2)
     df = preprocess_dataframe(df)
     df = combine_text_columns(df)
-
     label_map = {"Hoax": 1, "Non-Hoax": 0, 1: 1, 0: 0}
     df["label"] = df["label"].map(label_map)
     df = df[df["label"].notna()]
@@ -51,17 +54,15 @@ def prepare_data(df1, df2):
 def extract_features_and_model(df):
     X, vectorizer = tfidf_transform(df["gabungan"])
     y = df["label"]
-
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42)
-    
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     model = MultinomialNB()
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
-
     return model, vectorizer, X_test, y_test, y_pred
 
-# Inisialisasi data
+# -----------------------
+# 🚀 Inisialisasi
+# -----------------------
 try:
     df1, df2 = load_dataset()
     df = prepare_data(df1, df2)
@@ -71,7 +72,7 @@ except Exception as e:
     st.stop()
 
 # -----------------------
-# 🏠 Halaman Deteksi Hoaks
+# 🏠 Halaman: Deteksi Hoaks
 # -----------------------
 if menu == "Deteksi Hoaks":
     st.subheader("Masukkan Teks Berita:")
@@ -84,55 +85,45 @@ if menu == "Deteksi Hoaks":
             processed = preprocess_text(user_input)
             vectorized = vectorizer.transform([processed])
             prediction = model.predict(vectorized)[0]
-
             label_map = {1: "Hoax", 0: "Non-Hoax"}
             pred_label = label_map[prediction]
-
             st.success(f"✅ Prediksi: {pred_label}")
 
-            # Interpretasi LLM
+            # Interpretasi oleh Gemini
             try:
-                api_key = "AIzaSyDFRv6-gi44fDsJvR_l4E8N2Fxd45oGozU"  # 🔒 Simpan di secrets atau env var
+                api_key = "AIzaSyDFRv6-gi44fDsJvR_l4E8N2Fxd45oGozU"  # Sebaiknya simpan di secrets!
                 configure_gemini(api_key)
-                result = analyze_with_gemini(
-                    user_input,
-                    true_label="Unknown",
-                    predicted_label=pred_label
-                )
+                result = analyze_with_gemini(user_input, true_label="Unknown", predicted_label=pred_label)
                 st.markdown("### 📘 Hasil Interpretasi LLM:")
                 st.text(result)
             except Exception as e:
                 st.error(f"❌ Gagal menghasilkan interpretasi LLM:\n{e}")
 
 # -----------------------
-# 📂 Halaman Dataset
+# 📂 Halaman: Dataset
 # -----------------------
 elif menu == "Dataset":
     st.subheader("📄 Dataset Kaggle (Data_latih.csv):")
     st.dataframe(df1.head())
-
     st.subheader("📰 Dataset Detik.com (detik_data.csv):")
     st.dataframe(df2.head())
-
     st.subheader("🧩 Dataset Gabungan:")
     st.dataframe(df[['T_judul', 'T_konten', 'label']].head())
 
 # -----------------------
-# ⚙️ Halaman Preprocessing
+# ⚙️ Halaman: Preprocessing
 # -----------------------
 elif menu == "Preprocessing":
     st.subheader("🧼 Hasil Preprocessing:")
     st.dataframe(df[['T_judul', 'T_konten']].head())
-
     st.subheader("🔗 Gabungan Judul + Konten:")
     st.dataframe(df[['gabungan']].head())
 
 # -----------------------
-# 📊 Halaman Evaluasi Model
+# 📊 Halaman: Evaluasi Model
 # -----------------------
 elif menu == "Evaluasi Model":
-    st.subheader("📊 Evaluasi Model Klasifikasi Naive Bayes")
-
+    st.subheader("📊 Evaluasi Model Naive Bayes")
     acc = accuracy_score(y_test, y_pred)
     st.metric(label="🎯 Akurasi", value=f"{acc*100:.2f}%")
 
@@ -140,13 +131,16 @@ elif menu == "Evaluasi Model":
     report = classification_report(y_test, y_pred, target_names=["Non-Hoax", "Hoax"])
     st.text(report)
 
-    st.subheader("📈 Visualisasi Hasil Prediksi:")
+    st.subheader("📈 Visualisasi Prediksi (Pie Chart):")
     df_eval = pd.DataFrame({"Actual": y_test, "Predicted": y_pred})
     df_eval["Hasil"] = np.where(df_eval["Actual"] == df_eval["Predicted"], "Benar", "Salah")
 
-    fig, ax = plt.subplots(figsize=(6, 4))
-    sns.countplot(data=df_eval, x="Hasil", palette="pastel", ax=ax)
-    ax.set_title("Distribusi Prediksi Benar vs Salah")
+    hasil_count = df_eval["Hasil"].value_counts()
+    fig, ax = plt.subplots(figsize=(6, 6))
+    colors = sns.color_palette("pastel")[0:2]
+    ax.pie(hasil_count, labels=hasil_count.index, colors=colors, autopct='%.1f%%', startangle=90)
+    ax.set_title("Distribusi Prediksi Benar vs Salah", fontsize=14)
+    ax.axis("equal")
     st.pyplot(fig)
 
     st.subheader("🔍 Contoh Data Salah Prediksi:")
