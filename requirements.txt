@@ -1,25 +1,28 @@
 # Core Streamlit
 streamlit>=1.31.0
-streamlit-option-menu
-streamlit-elements
-# Data handling
+
+# UI Enhancement
+streamlit-elements>=0.1.0
+streamlit-option-menu>=0.3.6  # Optional, kalau masih dipakai di file lain
+
+# Data Handling
 pandas>=1.5.3
 numpy>=1.23.5
 
-# Text processing
+# Text Processing & NLP
 nltk>=3.8.1
 Sastrawi>=1.0.1
 scikit-learn>=1.3.0
 
-# Optional plotting (aktifkan jika memang dipakai)
+# Plotting
 matplotlib>=3.7.0
 seaborn>=0.12.2
 
 # Google Gemini API
 google-generativeai>=0.3.2
 
-# Untuk TF-IDF & model
+# TF-IDF & ML utils
 scipy>=1.10.0
 
-# Jika kamu menggunakan requests atau json manual (bisa hapus kalau tidak)
+# Requests (optional, jika Gemini API tidak langsung dari librarynya)
 requests>=2.31.0
