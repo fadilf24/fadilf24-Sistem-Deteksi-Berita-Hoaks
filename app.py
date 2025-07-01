@@ -1,6 +1,3 @@
-import warnings
-warnings.filterwarnings("ignore", category=SyntaxWarning)
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -10,7 +7,7 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import classification_report, accuracy_score
 import matplotlib.pyplot as plt
 import seaborn as sns
-from streamlit_elements import elements, mui, sync
+from streamlit_option_menu import option_menu
 
 from preprocessing import preprocess_text, preprocess_dataframe, load_and_clean_data
 from feature_extraction import combine_text_columns, tfidf_transform
@@ -20,44 +17,20 @@ from interpretation import configure_gemini, analyze_with_gemini
 # Konfigurasi Aplikasi
 # -----------------------
 st.set_page_config(page_title="Deteksi Berita Hoaks", page_icon="🔎", layout="wide")
+
+# -----------------------
+# Sidebar Navigasi dengan Icon (streamlit-option-menu)
+# -----------------------
+with st.sidebar:
+    selected = option_menu(
+        menu_title=None,
+        options=["Deteksi Hoaks", "Dataset", "Preprocessing", "Evaluasi Model"],
+        icons=["search", "folder", "tools", "bar-chart"],
+        default_index=0,
+        orientation="vertical"
+    )
+
 st.title("Deteksi Berita Hoaks (Naive Bayes + Gemini LLM)")
-
-# -----------------------
-# Sidebar Navigasi Collapse/Expand dengan Label
-# -----------------------
-menu_options = [
-    {"label": "Deteksi Hoaks", "key": "Deteksi Hoaks"},
-    {"label": "Dataset", "key": "Dataset"},
-    {"label": "Preprocessing", "key": "Preprocessing"},
-    {"label": "Evaluasi Model", "key": "Evaluasi Model"},
-]
-
-if "selected" not in st.session_state:
-    st.session_state.selected = "Deteksi Hoaks"
-if "sidebar_expanded" not in st.session_state:
-    st.session_state.sidebar_expanded = True
-
-with elements("sidebar"):
-    with mui.Box(sx={"height": "100vh", "backgroundColor": "#0e1117"}):
-        with mui.Stack(spacing=1, direction="column", sx={"p": 1, "alignItems": "center"}):
-            mui.Button(
-                "🔽" if st.session_state.sidebar_expanded else "☰",
-                onClick=lambda: st.session_state.update({"sidebar_expanded": not st.session_state.sidebar_expanded}),
-                color="primary",
-                variant="contained",
-                size="small"
-            )
-            for option in menu_options:
-                mui.Button(
-                    option["label"] if st.session_state.sidebar_expanded else option["label"][0],
-                    onClick=lambda label=option["key"]: st.session_state.update({"selected": label}),
-                    color="primary" if st.session_state.selected == option["key"] else "secondary",
-                    variant="outlined",
-                    size="small",
-                    fullWidth=st.session_state.sidebar_expanded
-                )
-
-menu = st.session_state.get("selected", "Deteksi Hoaks")
 
 # -----------------------
 # Load & Preprocess Data
@@ -105,7 +78,7 @@ except Exception as e:
 # -----------------------
 # Halaman: Deteksi Hoaks
 # -----------------------
-if menu == "Deteksi Hoaks":
+if selected == "Deteksi Hoaks":
     st.subheader("Masukkan Teks Berita:")
     user_input = st.text_area(
         "Contoh: Pemerintah mengumumkan vaksin palsu beredar di Jakarta...", height=200
@@ -128,7 +101,7 @@ if menu == "Deteksi Hoaks":
             probas = model.predict_proba(vectorized)[0]
             class_labels = ["Non-Hoax", "Hoax"]
 
-            st.subheader("Keyakinan Model (Pie Chart):")
+            st.subheader("📊 Keyakinan Model (Pie Chart):")
             fig1, ax1 = plt.subplots()
             ax1.pie(probas, labels=class_labels, autopct='%1.1f%%', startangle=90)
             ax1.axis('equal')
@@ -170,7 +143,7 @@ if menu == "Deteksi Hoaks":
 # -----------------------
 # Halaman: Dataset
 # -----------------------
-elif menu == "Dataset":
+elif selected == "Dataset":
     st.subheader("Dataset Kaggle (Data_latih.csv):")
     st.dataframe(df1.head())
     st.subheader("Dataset Detik.com (detik_data.csv):")
@@ -181,7 +154,7 @@ elif menu == "Dataset":
 # -----------------------
 # Halaman: Preprocessing
 # -----------------------
-elif menu == "Preprocessing":
+elif selected == "Preprocessing":
     st.subheader("Hasil Preprocessing:")
     st.dataframe(df[["T_judul", "T_konten"]].head())
     st.subheader("Gabungan Judul + Konten:")
@@ -190,7 +163,7 @@ elif menu == "Preprocessing":
 # -----------------------
 # Halaman: Evaluasi Model
 # -----------------------
-elif menu == "Evaluasi Model":
+elif selected == "Evaluasi Model":
     st.subheader("Evaluasi Model Naive Bayes")
     acc = accuracy_score(y_test, y_pred)
     st.metric(label="Akurasi", value=f"{acc*100:.2f}%")
@@ -201,7 +174,7 @@ elif menu == "Evaluasi Model":
     )
     st.text(report)
 
-    st.subheader("Visualisasi Prediksi (Pie Chart):")
+    st.subheader("Visualisasi Prediksi:")
     df_eval = pd.DataFrame({"Actual": y_test, "Predicted": y_pred})
     df_eval["Hasil"] = np.where(df_eval["Actual"] == df_eval["Predicted"], "Benar", "Salah")
     hasil_count = df_eval["Hasil"].value_counts()
