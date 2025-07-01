@@ -10,7 +10,7 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import classification_report, accuracy_score
 import matplotlib.pyplot as plt
 import seaborn as sns
-from streamlit_elements import elements, dashboard, mui, html
+from streamlit_elements import elements, mui
 
 from preprocessing import preprocess_text, preprocess_dataframe, load_and_clean_data
 from feature_extraction import combine_text_columns, tfidf_transform
@@ -23,7 +23,7 @@ st.set_page_config(page_title="Deteksi Berita Hoaks", page_icon="🔎", layout="
 st.title("Deteksi Berita Hoaks (Naive Bayes + Gemini LLM)")
 
 # -----------------------
-# Sidebar Navigasi dengan streamlit-elements + icon material
+# Sidebar Navigasi menggunakan mui.Stack agar tidak tumpang tindih
 # -----------------------
 menu_options = [
     {"label": "Deteksi Hoaks", "key": "Deteksi Hoaks", "icon": "search"},
@@ -32,19 +32,15 @@ menu_options = [
     {"label": "Evaluasi Model", "key": "Evaluasi Model", "icon": "bar_chart"},
 ]
 
-layout = [
-    dashboard.Item(f"item{i}", 0, i * 2, 1, 1) for i in range(len(menu_options))
-]
-
 if "selected" not in st.session_state:
-    st.session_state["selected"] = "Deteksi Hoaks"
+    st.session_state.selected = "Deteksi Hoaks"
 
 with elements("sidebar"):
-    with dashboard.Grid(layout=layout, columns=1, rowHeight=80, width=220):
-        for i, option in enumerate(menu_options):
-            def handle_click(label=option["key"]):
-                st.session_state.selected = label
-
+    mui.Stack(
+        spacing=2,
+        direction="column",
+        sx={"width": "200px", "padding": "1rem"},
+        children=[
             mui.Button(
                 mui.Stack(
                     direction="row",
@@ -56,10 +52,12 @@ with elements("sidebar"):
                     ]
                 ),
                 fullWidth=True,
-                onClick=handle_click,
                 variant="outlined",
-                color="primary"
+                onClick=lambda label=option["key"]: st.session_state.update({"selected": label})
             )
+            for option in menu_options
+        ]
+    )
 
 menu = st.session_state.get("selected", "Deteksi Hoaks")
 
@@ -205,7 +203,7 @@ elif menu == "Evaluasi Model":
     )
     st.text(report)
 
-    st.subheader("Visualisasi Prediksi (Pie Chart):")
+    st.subheader("Visualisasi Prediksi:")
     df_eval = pd.DataFrame({"Actual": y_test, "Predicted": y_pred})
     df_eval["Hasil"] = np.where(df_eval["Actual"] == df_eval["Predicted"], "Benar", "Salah")
     hasil_count = df_eval["Hasil"].value_counts()
