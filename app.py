@@ -102,7 +102,7 @@ if selected == "Deteksi Hoaks":
             class_labels = ["Non-Hoax", "Hoax"]
 
             st.subheader("📊 Keyakinan Model (Pie Chart):")
-            fig1, ax1 = plt.subplots()
+            fig1, ax1 = plt.subplots(figsize=(3, 3))
             ax1.pie(probas, labels=class_labels, autopct='%1.1f%%', startangle=90)
             ax1.axis('equal')
             st.pyplot(fig1)
