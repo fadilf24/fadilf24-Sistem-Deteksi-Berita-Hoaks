@@ -108,18 +108,27 @@ if selected == "Deteksi Hoaks":
             st.pyplot(fig1)
 
             # Interpretasi dengan Gemini
-            try:
-                api_key = st.secrets["GEMINI_API_KEY"]
-                with st.spinner("Menghasilkan interpretasi dengan Gemini..."):
-                    configure_gemini(api_key)
-                    result = analyze_with_gemini(
-                        user_input, true_label="Unknown", predicted_label=pred_label
-                    )
-                st.markdown("### Hasil Interpretasi LLM:")
-                st.text(result)
+             try:
+                result = analyze_with_gemini(
+                    text=user_input,
+                    predicted_label=predicted_label,
+                    used_links=used_links,
+                    distribution=dist_for_single
+                )
+
+                with st.expander("📜 Lihat Output Lengkap Gemini"):
+                    st.write(result['output_mentah'])
+
+                # Perbandingan dan Koreksi
+                if result["perbandingan_kebenaran"] == "sesuai":
+                    st.success("✅ Interpretasi Gemini **sesuai** dengan prediksi model.")
+                else:
+                    st.warning("⚠️ Interpretasi Gemini **berbeda** dari prediksi model.")
+                    st.markdown("#### 🤔 Penjelasan Perbedaan:")
+                    st.info(result["penjelasan_koreksi"])
+
             except Exception as e:
-                result = "Gagal interpretasi"
-                st.error(f"Gagal menghasilkan interpretasi LLM:\n{e}")
+                st.error(f"❌ Terjadi kesalahan saat menggunakan Gemini:\n{e}")
 
             # Simpan ke CSV
             hasil_baru = pd.DataFrame([{
