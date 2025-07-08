@@ -81,7 +81,7 @@ if selected == "Deteksi Hoaks":
                 label_map = {1: "Hoax", 0: "Non-Hoax"}
                 pred_label = label_map[prediction]
 
-            st.success(f"🧠 Prediksi: **{pred_label}**")
+            st.success(f"Prediksi: **{pred_label}**")
 
             # Plotly Pie Chart Keyakinan Model
             probas = model.predict_proba(vectorized)[0]
@@ -109,18 +109,18 @@ if selected == "Deteksi Hoaks":
                     distribution=None
                 )
 
-                with st.expander("📜 Lihat Output Lengkap Gemini"):
+                with st.expander("Lihat Output Lengkap Gemini"):
                     st.write(result['output_mentah'])
 
                 if result["perbandingan_kebenaran"] == "sesuai":
-                    st.success("✅ Interpretasi Gemini **sesuai** dengan prediksi model.")
+                    st.success("Interpretasi Gemini **sesuai** dengan prediksi model.")
                 else:
-                    st.warning("⚠️ Interpretasi Gemini **berbeda** dari prediksi model.")
-                    st.markdown("#### 🤔 Penjelasan Perbedaan:")
+                    st.warning("⚠ Interpretasi Gemini **berbeda** dari prediksi model.")
+                    st.markdown("#### Penjelasan Perbedaan:")
                     st.info(result["penjelasan_koreksi"])
 
             except Exception as e:
-                st.error(f"❌ Terjadi kesalahan saat menggunakan Gemini:\n{e}")
+                st.error(f"Terjadi kesalahan saat menggunakan Gemini:\n{e}")
 
             # Simpan hasil
             hasil_baru = pd.DataFrame([{
@@ -132,7 +132,7 @@ if selected == "Deteksi Hoaks":
 
             try:
                 hasil_baru.to_csv("hasil_prediksi.csv", mode="a", index=False, header=not os.path.exists("hasil_prediksi.csv"))
-                st.success("✅ Hasil disimpan ke `hasil_prediksi.csv`")
+                st.success(" Hasil disimpan ke `hasil_prediksi.csv`")
             except Exception as e:
                 st.warning(f"Gagal menyimpan hasil: {e}")
 
@@ -179,4 +179,4 @@ elif selected == "Evaluasi Model":
     if not salah.empty:
         st.dataframe(salah.head())
     else:
-        st.success("🎉 Semua prediksi benar!")
+        st.success("Semua prediksi benar!")
