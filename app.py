@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import os
 import plotly.express as px
-import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import classification_report, accuracy_score
@@ -13,10 +12,14 @@ from preprocessing import preprocess_text, preprocess_dataframe, load_and_clean_
 from feature_extraction import combine_text_columns, tfidf_transform
 from interpretation import configure_gemini, analyze_with_gemini
 
-# Konfigurasi halaman
+# -----------------------
+# Konfigurasi Halaman
+# -----------------------
 st.set_page_config(page_title="Deteksi Berita Hoaks", page_icon="🔎", layout="wide")
 
+# -----------------------
 # Sidebar Navigasi
+# -----------------------
 with st.sidebar:
     selected = option_menu(
         menu_title=None,
@@ -28,7 +31,9 @@ with st.sidebar:
 
 st.title("📰 Deteksi Berita Hoaks (Naive Bayes + Gemini LLM)")
 
-# Load Data
+# -----------------------
+# Load dan Preprocessing
+# -----------------------
 @st.cache_data
 def load_dataset():
     df1 = pd.read_csv("Data_latih.csv")
@@ -56,7 +61,7 @@ def extract_features_and_model(df):
     y_pred = model.predict(X_test)
     return model, vectorizer, X_test, y_test, y_pred
 
-# Load semua
+# Inisialisasi
 try:
     df1, df2 = load_dataset()
     df = prepare_data(df1, df2)
@@ -65,7 +70,9 @@ except Exception as e:
     st.error(f"Gagal memuat atau memproses data:\n{e}")
     st.stop()
 
-# ----------------------- Halaman -----------------------
+# -----------------------
+# Halaman: Deteksi Hoaks
+# -----------------------
 if selected == "Deteksi Hoaks":
     st.subheader("Masukkan Teks Berita:")
     user_input = st.text_area("Contoh: Pemerintah mengumumkan vaksin palsu beredar di Jakarta...", height=200)
@@ -78,17 +85,17 @@ if selected == "Deteksi Hoaks":
                 processed = preprocess_text(user_input)
                 vectorized = vectorizer.transform([processed])
                 prediction = model.predict(vectorized)[0]
+                probas = model.predict_proba(vectorized)[0]
+
                 label_map = {1: "Hoax", 0: "Non-Hoax"}
                 pred_label = label_map[prediction]
 
             st.success(f"Prediksi: **{pred_label}**")
 
-            # Plotly Pie Chart Keyakinan Model
-            probas = model.predict_proba(vectorized)[0]
-            class_labels = ["Non-Hoax", "Hoax"]
+            # Visualisasi keyakinan model
             st.subheader("📊 Keyakinan Model:")
             df_proba = pd.DataFrame({
-                "Label": class_labels,
+                "Label": ["Non-Hoax", "Hoax"],
                 "Probabilitas": probas
             })
             fig = px.pie(
@@ -101,41 +108,47 @@ if selected == "Deteksi Hoaks":
             st.plotly_chart(fig, use_container_width=True)
 
             # Interpretasi Gemini
+            result = None  # Inisialisasi agar tidak error jika gagal
             try:
                 result = analyze_with_gemini(
                     text=user_input,
                     predicted_label=pred_label,
                     used_links=[],
-                    distribution=None
+                    distribution={
+                        "Non-Hoax": f"{probas[0]*100:.1f}",
+                        "Hoax": f"{probas[1]*100:.1f}"
+                    }
                 )
 
-                with st.expander("Lihat Output Lengkap Gemini"):
-                    st.write(result['output_mentah'])
+                with st.expander("📜 Output Lengkap Gemini"):
+                    st.write(result.get('output_mentah', 'Tidak tersedia'))
 
-                if result["perbandingan_kebenaran"] == "sesuai":
-                    st.success("Interpretasi Gemini **sesuai** dengan prediksi model.")
+                if result.get("perbandingan_kebenaran") == "sesuai":
+                    st.success("✅ Interpretasi Gemini **sesuai** dengan prediksi model.")
                 else:
-                    st.warning("⚠ Interpretasi Gemini **berbeda** dari prediksi model.")
-                    st.markdown("#### Penjelasan Perbedaan:")
-                    st.info(result["penjelasan_koreksi"])
+                    st.warning("⚠️ Interpretasi Gemini **berbeda** dari prediksi model.")
+                    st.markdown("#### 🤔 Penjelasan Perbedaan:")
+                    st.info(result.get("penjelasan_koreksi", "Tidak tersedia."))
 
             except Exception as e:
-                st.error(f"Terjadi kesalahan saat menggunakan Gemini:\n{e}")
+                st.error(f"❌ Terjadi kesalahan saat menggunakan Gemini:\n{e}")
 
-            # Simpan hasil
-            hasil_baru = pd.DataFrame([{
-                "input": user_input,
-                "preprocessed": processed,
-                "prediksi": pred_label,
-                "interpretasi": result
-            }])
-
+            # Simpan hasil ke CSV
             try:
+                hasil_baru = pd.DataFrame([{
+                    "input": user_input,
+                    "preprocessed": processed,
+                    "prediksi": pred_label,
+                    "interpretasi": result
+                }])
                 hasil_baru.to_csv("hasil_prediksi.csv", mode="a", index=False, header=not os.path.exists("hasil_prediksi.csv"))
-                st.success(" Hasil disimpan ke `hasil_prediksi.csv`")
+                st.success("📝 Hasil disimpan ke `hasil_prediksi.csv`")
             except Exception as e:
                 st.warning(f"Gagal menyimpan hasil: {e}")
 
+# -----------------------
+# Halaman: Dataset
+# -----------------------
 elif selected == "Dataset":
     st.subheader("Dataset Kaggle:")
     st.dataframe(df1.head())
@@ -144,12 +157,18 @@ elif selected == "Dataset":
     st.subheader("Dataset Gabungan:")
     st.dataframe(df[["T_judul", "T_konten", "label"]].head())
 
+# -----------------------
+# Halaman: Preprocessing
+# -----------------------
 elif selected == "Preprocessing":
     st.subheader("Hasil Preprocessing:")
     st.dataframe(df[["T_judul", "T_konten"]].head())
     st.subheader("Gabungan Judul + Konten:")
     st.dataframe(df[["gabungan"]].head())
 
+# -----------------------
+# Halaman: Evaluasi Model
+# -----------------------
 elif selected == "Evaluasi Model":
     st.subheader("Evaluasi Model Naive Bayes")
     acc = accuracy_score(y_test, y_pred)
