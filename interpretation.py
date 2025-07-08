@@ -66,7 +66,6 @@ Teks Berita:
         "kebenaran": kebenaran.group(1).replace("-", " ") if kebenaran else None,
         "alasan": alasan.group(1).strip() if alasan else None,
         "ringkasan": ringkasan.group(1).strip() if ringkasan else None,
-        "link_asli": link_asli,
         "output_mentah": response_text,
         "perbandingan_kebenaran": perbandingan,
         "penjelasan_koreksi": penjelasan_koreksi
