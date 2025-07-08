@@ -7,7 +7,7 @@ def configure_gemini(api_key):
     """
     genai.configure(api_key=api_key)
 
-def analyze_with_gemini(text, predicted_label, used_links=None, example_url=None, distribution=None):
+def analyze_with_gemini(text, predicted_label, used_links=None, distribution=None):
     """
     Menganalisis teks berita menggunakan Gemini berdasarkan hasil prediksi model Naive Bayes.
     Mengembalikan hasil interpretasi, serta menjelaskan jika hasil Gemini berbeda dengan prediksi model.
@@ -23,7 +23,7 @@ Teks berikut adalah sebuah berita.
 
 Tugas Anda:
 1. Tentukan apakah berita ini termasuk 'Hoax' atau 'Non-Hoax'. Jawaban diawali dengan: "Kebenaran: ..."
-2. Jelaskan secara singkat mengapa Anda menilai demikian. Jika Anda menggunakan referensi atau sumber, cantumkan juga sumbernya di bagian alasan. Jawaban diawali dengan: "Alasan: ..."
+2. Jelaskan secara singkat mengapa Anda menilai demikian. Jika Anda menggunakan referensi atau sumber, sebutkan secara umum saja tanpa mencantumkan link. Jawaban diawali dengan: "Alasan: ..."
 3. Buat ringkasan isi berita maksimal dalam 5 kalimat. Jawaban diawali dengan: "Ringkasan: ..."
 
 Prediksi model Naive Bayes untuk berita ini: {predicted_label}
@@ -33,10 +33,6 @@ Teks Berita:
 {text}
 """
 
-    if example_url:
-        prompt += f"\nReferensi tambahan: {example_url}"
-
-    # Gunakan model Gemini
     model = genai.GenerativeModel("gemini-2.0-flash")
     response = model.generate_content(prompt)
     response_text = response.text.strip()
@@ -46,7 +42,6 @@ Teks Berita:
     alasan_val = None
     ringkasan_val = None
 
-    # Gunakan regex robust
     try:
         kebenaran_match = re.search(r"Kebenaran:\s*(Hoax|Non[- ]?Hoax)", response_text, re.IGNORECASE)
         if kebenaran_match:
@@ -61,16 +56,13 @@ Teks Berita:
             ringkasan_val = ringkasan_match.group(1).strip()
 
     except Exception as e:
-        # Jika parsing gagal, jangan hentikan aplikasi
         alasan_val = f"Gagal memproses respons Gemini: {e}"
 
-    # Normalisasi label
     pred_label_clean = predicted_label.strip().lower().replace("-", " ") if predicted_label else ""
     gemini_label_clean = kebenaran_val.lower() if kebenaran_val else ""
 
     perbandingan = "sesuai" if pred_label_clean == gemini_label_clean else "berbeda"
 
-    # Tambahkan penjelasan koreksi jika berbeda
     penjelasan_koreksi = None
     if perbandingan == "berbeda":
         penjelasan_koreksi = (
