@@ -126,8 +126,8 @@ if selected == "Deteksi Hoaks":
                 if result.get("perbandingan_kebenaran") == "sesuai":
                     st.success("✅ Interpretasi Gemini **sesuai** dengan prediksi model.")
                 else:
-                    st.warning("⚠️ Interpretasi Gemini **berbeda** dari prediksi model.")
-                    st.markdown("#### 🤔 Penjelasan Perbedaan:")
+                    st.warning("⚠ Interpretasi Gemini **berbeda** dari prediksi model.")
+                    st.markdown("Penjelasan kenapa Hasil Prediksi dan Interpretasi Berbeda:")
                     st.info(result.get("penjelasan_koreksi", "Tidak tersedia."))
 
             except Exception as e:
