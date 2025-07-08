@@ -7,7 +7,7 @@ streamlit>=1.31.0
 # UI Enhancement
 # -----------------------
 streamlit-elements>=0.1.0
-streamlit-option-menu>=0.3.6  # Optional (jika tidak digunakan, bisa dihapus)
+streamlit-option-menu>=0.3.6
 
 # -----------------------
 # Data Handling
@@ -26,7 +26,7 @@ scipy>=1.10.0
 # -----------------------
 # Plotting
 # -----------------------
-matplotlib>=3.7.0
+plotly>=5.18.0
 seaborn>=0.12.2
 
 # -----------------------
