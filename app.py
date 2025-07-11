@@ -9,6 +9,7 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import classification_report, accuracy_score
 from streamlit_option_menu import option_menu
 from fpdf import FPDF
+import re
 
 from preprocessing import preprocess_text, preprocess_dataframe, load_and_clean_data
 from feature_extraction import combine_text_columns, tfidf_transform
@@ -67,6 +68,10 @@ hasil_semua = []
 def safe_text(text):
     return text.encode("latin-1", errors="replace").decode("latin-1")
 
+def is_valid_text(text):
+    words = re.findall(r'\w+', text)
+    return len(words) >= 5 and any(len(word) > 3 for word in words)
+
 if selected == "Deteksi Hoaks":
     st.subheader("Masukkan Teks Berita:")
     user_input = st.text_area("Contoh: Pemerintah mengumumkan vaksin palsu beredar di Jakarta...", height=200)
@@ -74,6 +79,8 @@ if selected == "Deteksi Hoaks":
     if st.button("Analisis Berita"):
         if not user_input.strip():
             st.warning("Teks tidak boleh kosong.")
+        elif not is_valid_text(user_input):
+            st.warning("Masukkan teks yang lengkap dan valid, bukan hanya satu kata atau karakter acak.")
         else:
             with st.spinner("Memproses teks dan memprediksi..."):
                 processed = preprocess_text(user_input)
@@ -96,7 +103,7 @@ if selected == "Deteksi Hoaks":
                 names="Label",
                 values="Probabilitas",
                 title="Distribusi Probabilitas Prediksi",
-                color_discrete_sequence=px.colors.sequential.RdBu
+                color_discrete_sequence=["green", "red"]
             )
             st.plotly_chart(fig, use_container_width=True)
 
@@ -142,11 +149,9 @@ if selected == "Deteksi Hoaks":
 
     if hasil_semua:
         df_hasil = pd.concat(hasil_semua, ignore_index=True)
-        # Unduh sebagai CSV
         csv = df_hasil.to_csv(index=False).encode('utf-8')
         st.download_button("⬇️ Unduh Hasil (.csv)", data=csv, file_name="hasil_deteksi_berita.csv", mime="text/csv")
 
-        # Unduh sebagai PDF
         pdf = FPDF()
         pdf.set_auto_page_break(auto=True, margin=15)
         pdf.add_page()
