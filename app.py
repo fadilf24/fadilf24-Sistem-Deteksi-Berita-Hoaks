@@ -3,23 +3,19 @@ import pandas as pd
 import numpy as np
 import os
 import plotly.express as px
+import io
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import classification_report, accuracy_score
 from streamlit_option_menu import option_menu
+from fpdf import FPDF
 
 from preprocessing import preprocess_text, preprocess_dataframe, load_and_clean_data
 from feature_extraction import combine_text_columns, tfidf_transform
 from interpretation import configure_gemini, analyze_with_gemini
 
-# -----------------------
-# Konfigurasi Halaman
-# -----------------------
 st.set_page_config(page_title="Deteksi Berita Hoaks", page_icon="🔎", layout="wide")
 
-# -----------------------
-# Sidebar Navigasi
-# -----------------------
 with st.sidebar:
     selected = option_menu(
         menu_title=None,
@@ -29,11 +25,8 @@ with st.sidebar:
         orientation="vertical"
     )
 
-st.title("📰 Deteksi Berita Hoaks (Naive Bayes + Gemini LLM)")
+st.title("📰 Deteksi Berita Hoaks (Naive Bayes + LLM)")
 
-# -----------------------
-# Load dan Preprocessing
-# -----------------------
 @st.cache_data
 def load_dataset():
     df1 = pd.read_csv("Data_latih.csv")
@@ -61,7 +54,6 @@ def extract_features_and_model(df):
     y_pred = model.predict(X_test)
     return model, vectorizer, X_test, y_test, y_pred
 
-# Inisialisasi
 try:
     df1, df2 = load_dataset()
     df = prepare_data(df1, df2)
@@ -70,9 +62,8 @@ except Exception as e:
     st.error(f"Gagal memuat atau memproses data:\n{e}")
     st.stop()
 
-# -----------------------
-# Halaman: Deteksi Hoaks
-# -----------------------
+hasil_semua = []
+
 if selected == "Deteksi Hoaks":
     st.subheader("Masukkan Teks Berita:")
     user_input = st.text_area("Contoh: Pemerintah mengumumkan vaksin palsu beredar di Jakarta...", height=200)
@@ -92,8 +83,7 @@ if selected == "Deteksi Hoaks":
 
             st.success(f"Prediksi: **{pred_label}**")
 
-            # Visualisasi keyakinan model
-            st.subheader("📊 Keyakinan Model:")
+            st.subheader("Keyakinan Model:")
             df_proba = pd.DataFrame({
                 "Label": ["Non-Hoax", "Hoax"],
                 "Probabilitas": probas
@@ -107,8 +97,6 @@ if selected == "Deteksi Hoaks":
             )
             st.plotly_chart(fig, use_container_width=True)
 
-            # Interpretasi Gemini
-            result = None  # Inisialisasi agar tidak error jika gagal
             try:
                 result = analyze_with_gemini(
                     text=user_input,
@@ -120,31 +108,60 @@ if selected == "Deteksi Hoaks":
                     }
                 )
 
-                with st.expander("📜 Output Lengkap Gemini"):
+                with st.expander("Hasil Interpretasi LLM"):
                     st.write(result.get('output_mentah', 'Tidak tersedia'))
 
                 if result.get("perbandingan_kebenaran") == "sesuai":
-                    st.success("✅ Interpretasi Gemini **sesuai** dengan prediksi model.")
+                    st.success("Interpretasi LLM **sesuai** dengan prediksi model.")
                 else:
-                    st.warning("⚠ Interpretasi Gemini **berbeda** dari prediksi model.")
-                    st.markdown("Penjelasan kenapa Hasil Prediksi dan Interpretasi Berbeda:")
+                    st.warning("⚠ Interpretasi LLM **berbeda** dari prediksi model.")
+                    st.markdown("Penjelasan perbedaan hasil prediksi dan interpretasi:")
                     st.info(result.get("penjelasan_koreksi", "Tidak tersedia."))
 
-            except Exception as e:
-                st.error(f"❌ Terjadi kesalahan saat menggunakan Gemini:\n{e}")
-
-            # Simpan hasil ke CSV
-            try:
                 hasil_baru = pd.DataFrame([{
-                    "input": user_input,
-                    "preprocessed": processed,
-                    "prediksi": pred_label,
-                    "interpretasi": result
+                    "Input": user_input,
+                    "Preprocessed": processed,
+                    "Prediksi Model": pred_label,
+                    "Probabilitas Non-Hoax": f"{probas[0]*100:.2f}%",
+                    "Probabilitas Hoax": f"{probas[1]*100:.2f}%",
+                    "Kebenaran LLM": result.get("kebenaran"),
+                    "Alasan LLM": result.get("alasan"),
+                    "Ringkasan Berita": result.get("ringkasan"),
+                    "Perbandingan": result.get("perbandingan_kebenaran"),
+                    "Penjelasan Koreksi": result.get("penjelasan_koreksi")
                 }])
                 hasil_baru.to_csv("hasil_prediksi.csv", mode="a", index=False, header=not os.path.exists("hasil_prediksi.csv"))
-                st.success("📝 Hasil disimpan ke `hasil_prediksi.csv`")
+                hasil_semua.append(hasil_baru)
+                st.success("Hasil disimpan ke `hasil_prediksi.csv`")
+
             except Exception as e:
-                st.warning(f"Gagal menyimpan hasil: {e}")
+                st.error(f"❌ Terjadi kesalahan saat menggunakan LLM:\n{e}")
+
+    if hasil_semua:
+        df_hasil = pd.concat(hasil_semua, ignore_index=True)
+        # Unduh sebagai CSV
+        csv = df_hasil.to_csv(index=False).encode('utf-8')
+        st.download_button("⬇️ Unduh Hasil (.csv)", data=csv, file_name="hasil_deteksi_berita.csv", mime="text/csv")
+
+        # Unduh sebagai PDF
+        pdf = FPDF()
+        pdf.set_auto_page_break(auto=True, margin=15)
+        pdf.add_page()
+        pdf.set_font("Arial", size=10)
+
+        for idx, row in df_hasil.iterrows():
+            pdf.multi_cell(0, 10, txt=f"Input: {row['Input']}\nPreprocessed: {row['Preprocessed']}\nPrediksi Model: {row['Prediksi Model']}\nProbabilitas Non-Hoax: {row['Probabilitas Non-Hoax']}\nProbabilitas Hoax: {row['Probabilitas Hoax']}\nKebenaran LLM: {row['Kebenaran LLM']}\nAlasan LLM: {row['Alasan LLM']}\nRingkasan Berita: {row['Ringkasan Berita']}\nPerbandingan: {row['Perbandingan']}\nPenjelasan Koreksi: {row['Penjelasan Koreksi']}\n\n", border=0)
+
+        pdf_output = io.BytesIO()
+        pdf.output(pdf_output)
+        pdf_output.seek(0)
+
+        st.download_button(
+            label="⬇️ Unduh Hasil (.pdf)",
+            data=pdf_output,
+            file_name="hasil_deteksi_berita.pdf",
+            mime="application/pdf"
+        )
 
 # -----------------------
 # Halaman: Dataset
