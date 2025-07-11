@@ -5,17 +5,28 @@ import os
 import plotly.express as px
 import io
 import re
+import json
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import classification_report, accuracy_score
 from streamlit_option_menu import option_menu
 from fpdf import FPDF
+import firebase_admin
+from firebase_admin import credentials, db
 
 from preprocessing import preprocess_text, preprocess_dataframe, load_and_clean_data
 from feature_extraction import combine_text_columns, tfidf_transform
 from interpretation import configure_gemini, analyze_with_gemini
 
 st.set_page_config(page_title="Deteksi Berita Hoaks", page_icon="🔎", layout="wide")
+
+# Inisialisasi Firebase
+if not firebase_admin._apps:
+    firebase_cred = json.loads(st.secrets["FIREBASE_KEY"])
+    cred = credentials.Certificate(firebase_cred)
+    firebase_admin.initialize_app(cred, {
+        "databaseURL": "https://deteksi-hoaks-streamlit-default-rtdb.firebaseio.com/"
+    })
 
 with st.sidebar:
     selected = option_menu(
@@ -127,10 +138,25 @@ if selected == "Deteksi Hoaks":
                     st.markdown("Penjelasan perbedaan hasil prediksi dan interpretasi:")
                     st.info(result.get("penjelasan_koreksi", "Tidak tersedia."))
 
-                hasil_baru = pd.DataFrame([{...}])
+                hasil_dict = {
+                    "Input": user_input,
+                    "Preprocessed": processed,
+                    "Prediksi Model": pred_label,
+                    "Probabilitas Non-Hoax": f"{probas[0]*100:.2f}%",
+                    "Probabilitas Hoax": f"{probas[1]*100:.2f}%",
+                    "Kebenaran LLM": result.get("kebenaran"),
+                    "Alasan LLM": result.get("alasan"),
+                    "Ringkasan Berita": result.get("ringkasan"),
+                    "Perbandingan": result.get("perbandingan_kebenaran"),
+                    "Penjelasan Koreksi": result.get("penjelasan_koreksi")
+                }
+
+                db.reference("hasil_prediksi").push(hasil_dict)
+
+                hasil_baru = pd.DataFrame([hasil_dict])
                 hasil_baru.to_csv("hasil_prediksi.csv", mode="a", index=False, header=not os.path.exists("hasil_prediksi.csv"))
                 hasil_semua.append(hasil_baru)
-                st.success("Hasil disimpan ke `hasil_prediksi.csv`")
+                st.success("Hasil disimpan ke Firebase dan file lokal.")
 
             except Exception as e:
                 st.error(f"❌ Terjadi kesalahan saat menggunakan LLM:\n{e}")
