@@ -4,12 +4,12 @@ import numpy as np
 import os
 import plotly.express as px
 import io
+import re
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import classification_report, accuracy_score
 from streamlit_option_menu import option_menu
 from fpdf import FPDF
-import re
 
 from preprocessing import preprocess_text, preprocess_dataframe, load_and_clean_data
 from feature_extraction import combine_text_columns, tfidf_transform
@@ -55,6 +55,13 @@ def extract_features_and_model(df):
     y_pred = model.predict(X_test)
     return model, vectorizer, X_test, y_test, y_pred
 
+def safe_text(text):
+    return text.encode("latin-1", errors="replace").decode("latin-1")
+
+def is_valid_text(text):
+    words = re.findall(r'\w+', text)
+    return len(words) >= 5 and any(len(word) > 3 for word in words)
+
 try:
     df1, df2 = load_dataset()
     df = prepare_data(df1, df2)
@@ -64,13 +71,6 @@ except Exception as e:
     st.stop()
 
 hasil_semua = []
-
-def safe_text(text):
-    return text.encode("latin-1", errors="replace").decode("latin-1")
-
-def is_valid_text(text):
-    words = re.findall(r'\w+', text)
-    return len(words) >= 5 and any(len(word) > 3 for word in words)
 
 if selected == "Deteksi Hoaks":
     st.subheader("Masukkan Teks Berita:")
@@ -87,7 +87,6 @@ if selected == "Deteksi Hoaks":
                 vectorized = vectorizer.transform([processed])
                 prediction = model.predict(vectorized)[0]
                 probas = model.predict_proba(vectorized)[0]
-
                 label_map = {1: "Hoax", 0: "Non-Hoax"}
                 pred_label = label_map[prediction]
 
@@ -128,18 +127,7 @@ if selected == "Deteksi Hoaks":
                     st.markdown("Penjelasan perbedaan hasil prediksi dan interpretasi:")
                     st.info(result.get("penjelasan_koreksi", "Tidak tersedia."))
 
-                hasil_baru = pd.DataFrame([{
-                    "Input": user_input,
-                    "Preprocessed": processed,
-                    "Prediksi Model": pred_label,
-                    "Probabilitas Non-Hoax": f"{probas[0]*100:.2f}%",
-                    "Probabilitas Hoax": f"{probas[1]*100:.2f}%",
-                    "Kebenaran LLM": result.get("kebenaran"),
-                    "Alasan LLM": result.get("alasan"),
-                    "Ringkasan Berita": result.get("ringkasan"),
-                    "Perbandingan": result.get("perbandingan_kebenaran"),
-                    "Penjelasan Koreksi": result.get("penjelasan_koreksi")
-                }])
+                hasil_baru = pd.DataFrame([{...}])
                 hasil_baru.to_csv("hasil_prediksi.csv", mode="a", index=False, header=not os.path.exists("hasil_prediksi.csv"))
                 hasil_semua.append(hasil_baru)
                 st.success("Hasil disimpan ke `hasil_prediksi.csv`")
