@@ -64,6 +64,9 @@ except Exception as e:
 
 hasil_semua = []
 
+def safe_text(text):
+    return text.encode("latin-1", errors="replace").decode("latin-1")
+
 if selected == "Deteksi Hoaks":
     st.subheader("Masukkan Teks Berita:")
     user_input = st.text_area("Contoh: Pemerintah mengumumkan vaksin palsu beredar di Jakarta...", height=200)
@@ -150,7 +153,8 @@ if selected == "Deteksi Hoaks":
         pdf.set_font("Arial", size=10)
 
         for idx, row in df_hasil.iterrows():
-            pdf.multi_cell(0, 10, txt=f"Input: {row['Input']}\nPreprocessed: {row['Preprocessed']}\nPrediksi Model: {row['Prediksi Model']}\nProbabilitas Non-Hoax: {row['Probabilitas Non-Hoax']}\nProbabilitas Hoax: {row['Probabilitas Hoax']}\nKebenaran LLM: {row['Kebenaran LLM']}\nAlasan LLM: {row['Alasan LLM']}\nRingkasan Berita: {row['Ringkasan Berita']}\nPerbandingan: {row['Perbandingan']}\nPenjelasan Koreksi: {row['Penjelasan Koreksi']}\n\n", border=0)
+            content = f"Input: {row['Input']}\nPreprocessed: {row['Preprocessed']}\nPrediksi Model: {row['Prediksi Model']}\nProbabilitas Non-Hoax: {row['Probabilitas Non-Hoax']}\nProbabilitas Hoax: {row['Probabilitas Hoax']}\nKebenaran LLM: {row['Kebenaran LLM']}\nAlasan LLM: {row['Alasan LLM']}\nRingkasan Berita: {row['Ringkasan Berita']}\nPerbandingan: {row['Perbandingan']}\nPenjelasan Koreksi: {row['Penjelasan Koreksi']}\n\n"
+            pdf.multi_cell(0, 10, txt=safe_text(content), border=0)
 
         pdf_output = io.BytesIO()
         pdf.output(pdf_output)
@@ -163,9 +167,6 @@ if selected == "Deteksi Hoaks":
             mime="application/pdf"
         )
 
-# -----------------------
-# Halaman: Dataset
-# -----------------------
 elif selected == "Dataset":
     st.subheader("Dataset Kaggle:")
     st.dataframe(df1.head())
@@ -174,18 +175,12 @@ elif selected == "Dataset":
     st.subheader("Dataset Gabungan:")
     st.dataframe(df[["T_judul", "T_konten", "label"]].head())
 
-# -----------------------
-# Halaman: Preprocessing
-# -----------------------
 elif selected == "Preprocessing":
     st.subheader("Hasil Preprocessing:")
     st.dataframe(df[["T_judul", "T_konten"]].head())
     st.subheader("Gabungan Judul + Konten:")
     st.dataframe(df[["gabungan"]].head())
 
-# -----------------------
-# Halaman: Evaluasi Model
-# -----------------------
 elif selected == "Evaluasi Model":
     st.subheader("Evaluasi Model Naive Bayes")
     acc = accuracy_score(y_test, y_pred)
