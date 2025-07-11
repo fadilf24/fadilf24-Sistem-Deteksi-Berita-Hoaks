@@ -228,9 +228,29 @@ elif selected == "Evaluasi Model":
 elif selected == "Riwayat Prediksi":
     st.subheader("Riwayat Prediksi yang Disimpan di Firebase")
     df_riwayat = read_predictions_from_firebase()
+
     if not df_riwayat.empty:
+        # Tentukan urutan kolom yang diinginkan (tanpa timestamp)
+        urutan_kolom = [
+            "Input",
+            "Preprocessed",
+            "Prediksi Model",
+            "Probabilitas Non-Hoax",
+            "Probabilitas Hoax",
+            "Kebenaran LLM",
+            "Alasan LLM",
+            "Ringkasan Berita",
+            "Perbandingan",
+            "Penjelasan Koreksi"
+        ]
+        # Tampilkan hanya kolom yang tersedia
+        kolom_tersedia = [col for col in urutan_kolom if col in df_riwayat.columns]
+        df_riwayat = df_riwayat[kolom_tersedia]
+
+        # Tampilkan data dan unduhan
         st.dataframe(df_riwayat)
         csv_data = df_riwayat.to_csv(index=False).encode("utf-8")
         st.download_button("⬇️ Unduh Riwayat (.csv)", data=csv_data, file_name="riwayat_prediksi_firebase.csv", mime="text/csv")
     else:
         st.info("Belum ada data prediksi yang disimpan.")
+
