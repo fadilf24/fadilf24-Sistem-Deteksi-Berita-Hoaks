@@ -22,7 +22,7 @@ from interpretation import configure_gemini, analyze_with_gemini
 st.set_page_config(page_title="Deteksi Berita Hoaks", page_icon="🔎", layout="wide")
 
 # Konfigurasi Firebase
-firebase_cred = st.secrets["FIREBASE_KEY"]
+firebase_cred = dict(st.secrets["FIREBASE_KEY"])  # 💡 konversi ke dict
 if not firebase_admin._apps:
     cred = credentials.Certificate(firebase_cred)
     firebase_admin.initialize_app(cred, {
