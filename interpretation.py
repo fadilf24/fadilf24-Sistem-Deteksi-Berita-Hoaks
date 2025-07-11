@@ -9,8 +9,8 @@ def configure_gemini(api_key):
 
 def analyze_with_gemini(text, predicted_label, used_links=None, distribution=None):
     """
-    Menganalisis teks berita menggunakan Gemini berdasarkan hasil prediksi model Naive Bayes.
-    Mengembalikan hasil interpretasi, serta menjelaskan jika hasil Gemini berbeda dengan prediksi model.
+    Menganalisis teks berita menggunakan LLM berdasarkan hasil prediksi model Naive Bayes.
+    Mengembalikan hasil interpretasi, serta menjelaskan jika hasil LLM berbeda dengan prediksi model.
     """
 
     distribusi_str = ""
@@ -37,7 +37,7 @@ Teks Berita:
     response = model.generate_content(prompt)
     response_text = response.text.strip()
 
-    # Inisialisasi default
+    # Inisialisasi hasil
     kebenaran_val = None
     alasan_val = None
     ringkasan_val = None
@@ -56,20 +56,24 @@ Teks Berita:
             ringkasan_val = ringkasan_match.group(1).strip()
 
     except Exception as e:
-        alasan_val = f"Gagal memproses respons Gemini: {e}"
+        alasan_val = f"Gagal memproses respons LLM: {e}"
 
+    # Bandingkan hasil prediksi dengan interpretasi LLM
     pred_label_clean = predicted_label.strip().lower().replace("-", " ") if predicted_label else ""
-    gemini_label_clean = kebenaran_val.lower() if kebenaran_val else ""
+    llm_label_clean = kebenaran_val.lower() if kebenaran_val else ""
+    perbandingan = "sesuai" if pred_label_clean == llm_label_clean else "berbeda"
 
-    perbandingan = "sesuai" if pred_label_clean == gemini_label_clean else "berbeda"
-
+    # Penjelasan koreksi yang ramah pengguna umum
     penjelasan_koreksi = None
     if perbandingan == "berbeda":
         penjelasan_koreksi = (
-            f"Model memprediksi label: **{predicted_label}**, namun Gemini menyatakan kebenarannya adalah **{kebenaran_val}**.\n\n"
-            f"Hal ini bisa terjadi karena model hanya mengandalkan representasi statistik (TF-IDF + Naive Bayes), "
-            f"sedangkan Gemini melakukan analisis semantik yang lebih dalam.\n\n"
-            f"**Alasan Gemini:** {alasan_val or 'Tidak tersedia'}"
+            f"Model otomatis memprediksi bahwa berita ini adalah **{predicted_label}**, "
+            f"namun hasil analisis dari LLM (Large Language Model) menyatakan bahwa berita ini termasuk **{kebenaran_val}**.\n\n"
+            f"Perbedaan ini bisa terjadi karena model otomatis seperti Naïve Bayes hanya menganalisis pola dan frekuensi kata dalam teks, "
+            f"tanpa memahami makna atau konteks isi berita.\n\n"
+            f"Sebaliknya, LLM mampu memahami bahasa secara lebih dalam, termasuk logika kalimat dan fakta umum. "
+            f"Hal ini membuat LLM dapat menilai apakah sebuah berita terdengar masuk akal atau justru mengandung informasi yang menyesatkan.\n\n"
+            f"**Alasan LLM:** {alasan_val or 'Tidak tersedia'}"
         )
 
     return {
