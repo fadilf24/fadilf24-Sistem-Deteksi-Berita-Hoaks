@@ -6,12 +6,12 @@ import plotly.express as px
 import io
 import re
 import json
+import uuid
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import classification_report, accuracy_score
 from streamlit_option_menu import option_menu
 from fpdf import FPDF
-
 import firebase_admin
 from firebase_admin import credentials, db
 
@@ -21,24 +21,40 @@ from interpretation import configure_gemini, analyze_with_gemini
 
 st.set_page_config(page_title="Deteksi Berita Hoaks", page_icon="🔎", layout="wide")
 
+# Konfigurasi Firebase
+firebase_cred = json.loads(st.secrets["FIREBASE_KEY"].to_dict())
+if not firebase_admin._apps:
+    cred = credentials.Certificate(firebase_cred)
+    firebase_admin.initialize_app(cred, {
+        'databaseURL': f"https://{firebase_cred['project_id']}.firebaseio.com"
+    })
+
+def simpan_ke_firebase(data):
+    ref = db.reference("prediksi_hoaks")
+    ref.child(str(uuid.uuid4())).set(data)
+
+def read_predictions_from_firebase():
+    try:
+        ref = db.reference("prediksi_hoaks")
+        data = ref.get()
+        if data:
+            return pd.DataFrame(data.values())
+        else:
+            return pd.DataFrame()
+    except Exception as e:
+        st.error(f"Gagal membaca data dari Firebase: {e}")
+        return pd.DataFrame()
+
 with st.sidebar:
     selected = option_menu(
         menu_title=None,
-        options=["Deteksi Hoaks", "Dataset", "Preprocessing", "Evaluasi Model"],
-        icons=["search", "folder", "tools", "bar-chart"],
+        options=["Deteksi Hoaks", "Dataset", "Preprocessing", "Evaluasi Model", "Riwayat Prediksi"],
+        icons=["search", "folder", "tools", "bar-chart", "clock-history"],
         default_index=0,
         orientation="vertical"
     )
 
 st.title("📰 Deteksi Berita Hoaks (Naive Bayes + LLM)")
-
-# Inisialisasi Firebase
-firebase_cred = dict(st.secrets["FIREBASE_KEY"])
-if not firebase_admin._apps:
-    cred = credentials.Certificate(firebase_cred)
-    firebase_admin.initialize_app(cred, {
-        "databaseURL": f"https://console.firebase.google.com/project/deteksi-hoaks-streamlit/database/deteksi-hoaks-streamlit-default-rtdb/data/~2F"
-    })
 
 @st.cache_data
 def load_dataset():
@@ -139,7 +155,7 @@ if selected == "Deteksi Hoaks":
                     st.markdown("Penjelasan perbedaan hasil prediksi dan interpretasi:")
                     st.info(result.get("penjelasan_koreksi", "Tidak tersedia."))
 
-                hasil_baru = pd.DataFrame([{ 
+                hasil_baru = {
                     "Input": user_input,
                     "Preprocessed": processed,
                     "Prediksi Model": pred_label,
@@ -150,15 +166,11 @@ if selected == "Deteksi Hoaks":
                     "Ringkasan Berita": result.get("ringkasan"),
                     "Perbandingan": result.get("perbandingan_kebenaran"),
                     "Penjelasan Koreksi": result.get("penjelasan_koreksi")
-                }])
+                }
 
-                # Simpan ke Firebase Realtime Database
-                ref = db.reference("hasil_prediksi")
-                ref.push(hasil_baru.to_dict(orient="records")[0])
-
-                hasil_baru.to_csv("hasil_prediksi.csv", mode="a", index=False, header=not os.path.exists("hasil_prediksi.csv"))
-                hasil_semua.append(hasil_baru)
-                st.success("Hasil disimpan ke `hasil_prediksi.csv` dan Firebase")
+                simpan_ke_firebase(hasil_baru)
+                hasil_semua.append(pd.DataFrame([hasil_baru]))
+                st.success("Hasil disimpan ke Firebase Realtime Database")
 
             except Exception as e:
                 st.error(f"❌ Terjadi kesalahan saat menggunakan LLM:\n{e}")
@@ -168,25 +180,60 @@ if selected == "Deteksi Hoaks":
         csv = df_hasil.to_csv(index=False).encode('utf-8')
         st.download_button("⬇️ Unduh Hasil (.csv)", data=csv, file_name="hasil_deteksi_berita.csv", mime="text/csv")
 
-        pdf = FPDF()
-        pdf.set_auto_page_break(auto=True, margin=15)
-        pdf.add_page()
-        pdf.set_font("Arial", size=10)
+elif selected == "Dataset":
+    st.subheader("Dataset Kaggle:")
+    st.dataframe(df1.head())
+    st.subheader("Dataset Detik.com:")
+    st.dataframe(df2.head())
+    st.subheader("Dataset Gabungan:")
+    st.dataframe(df[["T_judul", "T_konten", "label"]].head())
 
-        for idx, row in df_hasil.iterrows():
-            content = f"Input: {row['Input']}\nPreprocessed: {row['Preprocessed']}\nPrediksi Model: {row['Prediksi Model']}\nProbabilitas Non-Hoax: {row['Probabilitas Non-Hoax']}\nProbabilitas Hoax: {row['Probabilitas Hoax']}\nKebenaran LLM: {row['Kebenaran LLM']}\nAlasan LLM: {row['Alasan LLM']}\nRingkasan Berita: {row['Ringkasan Berita']}\nPerbandingan: {row['Perbandingan']}\nPenjelasan Koreksi: {row['Penjelasan Koreksi']}\n\n"
-            pdf.multi_cell(0, 10, txt=safe_text(content), border=0)
+elif selected == "Preprocessing":
+    st.subheader("Hasil Preprocessing:")
+    st.dataframe(df[["T_judul", "T_konten"]].head())
+    st.subheader("Gabungan Judul + Konten:")
+    st.dataframe(df[["gabungan"]].head())
 
-        pdf_output = io.BytesIO()
-        pdf.output(pdf_output)
-        pdf_output.seek(0)
+elif selected == "Evaluasi Model":
+    st.subheader("Evaluasi Model Naive Bayes")
+    acc = accuracy_score(y_test, y_pred)
+    st.metric(label="Akurasi", value=f"{acc*100:.2f}%")
 
-        st.download_button(
-            label="⬇️ Unduh Hasil (.pdf)",
-            data=pdf_output,
-            file_name="hasil_deteksi_berita.pdf",
-            mime="application/pdf"
-        )
+    st.subheader("Laporan Klasifikasi:")
+    report = classification_report(y_test, y_pred, target_names=["Non-Hoax", "Hoax"])
+    st.text(report)
+
+    st.subheader("Visualisasi Prediksi:")
+    df_eval = pd.DataFrame({"Actual": y_test, "Predicted": y_pred})
+    df_eval["Hasil"] = np.where(df_eval["Actual"] == df_eval["Predicted"], "Benar", "Salah")
+    hasil_count = df_eval["Hasil"].value_counts().reset_index()
+    hasil_count.columns = ["Hasil", "Jumlah"]
+
+    fig_eval = px.pie(
+        hasil_count,
+        names="Hasil",
+        values="Jumlah",
+        title="Distribusi Prediksi Benar vs Salah",
+        color_discrete_sequence=px.colors.sequential.RdBu
+    )
+    st.plotly_chart(fig_eval, use_container_width=True)
+
+    st.subheader("Contoh Data Salah Prediksi:")
+    salah = df_eval[df_eval["Hasil"] == "Salah"]
+    if not salah.empty:
+        st.dataframe(salah.head())
+    else:
+        st.success("Semua prediksi benar!")
+
+elif selected == "Riwayat Prediksi":
+    st.subheader("Riwayat Prediksi yang Disimpan di Firebase")
+    df_riwayat = read_predictions_from_firebase()
+    if not df_riwayat.empty:
+        st.dataframe(df_riwayat)
+        csv_data = df_riwayat.to_csv(index=False).encode("utf-8")
+        st.download_button("⬇️ Unduh Riwayat (.csv)", data=csv_data, file_name="riwayat_prediksi_firebase.csv", mime="text/csv")
+    else:
+        st.info("Belum ada data prediksi yang disimpan.")
 
 elif selected == "Dataset":
     st.subheader("Dataset Kaggle:")
