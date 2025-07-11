@@ -22,11 +22,11 @@ from interpretation import configure_gemini, analyze_with_gemini
 st.set_page_config(page_title="Deteksi Berita Hoaks", page_icon="🔎", layout="wide")
 
 # Konfigurasi Firebase
-firebase_cred = json.loads(st.secrets["FIREBASE_KEY"].to_dict())
+firebase_cred = st.secrets["FIREBASE_KEY"]
 if not firebase_admin._apps:
     cred = credentials.Certificate(firebase_cred)
     firebase_admin.initialize_app(cred, {
-        'databaseURL': f"https://{firebase_cred['project_id']}.firebaseio.com"
+        'databaseURL': "https://deteksi-hoaks-streamlit-default-rtdb.asia-southeast1.firebasedatabase.app/"
     })
 
 def simpan_ke_firebase(data):
