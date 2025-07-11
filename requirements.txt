@@ -6,8 +6,8 @@ streamlit>=1.31.0
 # -----------------------
 # UI Enhancement
 # -----------------------
-streamlit-elements>=0.1.0
 streamlit-option-menu>=0.3.6
+streamlit-elements>=0.1.0
 
 # -----------------------
 # Data Handling
@@ -35,16 +35,16 @@ seaborn>=0.12.2
 google-generativeai>=0.3.2
 
 # -----------------------
+# PDF Generation
+# -----------------------
+fpdf2>=2.7.6
+
+# -----------------------
 # Utilities
 # -----------------------
 requests>=2.31.0
 
 # -----------------------
-# PDF Generation
+# Firebase Integration
 # -----------------------
-fpdf2>=2.7.6
-
-# =======================
-# Firebase
-# =======================
 firebase-admin>=6.4.0
