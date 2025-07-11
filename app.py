@@ -201,7 +201,7 @@ elif selected == "Evaluasi Model":
         names="Hasil",
         values="Jumlah",
         title="Distribusi Prediksi Benar vs Salah",
-        color_discrete_sequence=px.colors.sequential.Blues
+        color_discrete_sequence=px.colors.sequential.RdBu
     )
     st.plotly_chart(fig_eval, use_container_width=True)
 
