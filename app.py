@@ -11,6 +11,7 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import classification_report, accuracy_score
 from streamlit_option_menu import option_menu
 from fpdf import FPDF
+
 import firebase_admin
 from firebase_admin import credentials, db
 
@@ -19,14 +20,6 @@ from feature_extraction import combine_text_columns, tfidf_transform
 from interpretation import configure_gemini, analyze_with_gemini
 
 st.set_page_config(page_title="Deteksi Berita Hoaks", page_icon="🔎", layout="wide")
-
-# Inisialisasi Firebase
-if not firebase_admin._apps:
-    firebase_cred = st.secrets["FIREBASE_KEY"]
-    cred = credentials.Certificate(firebase_cred)
-    firebase_admin.initialize_app(cred, {
-        "databaseURL": "https://deteksi-hoaks-streamlit-default-rtdb.firebaseio.com/"
-    })
 
 with st.sidebar:
     selected = option_menu(
@@ -38,6 +31,14 @@ with st.sidebar:
     )
 
 st.title("📰 Deteksi Berita Hoaks (Naive Bayes + LLM)")
+
+# Inisialisasi Firebase
+firebase_cred = dict(st.secrets["FIREBASE_KEY"])
+if not firebase_admin._apps:
+    cred = credentials.Certificate(firebase_cred)
+    firebase_admin.initialize_app(cred, {
+        "databaseURL": f"https://console.firebase.google.com/project/deteksi-hoaks-streamlit/database/deteksi-hoaks-streamlit-default-rtdb/data/~2F"
+    })
 
 @st.cache_data
 def load_dataset():
@@ -138,7 +139,7 @@ if selected == "Deteksi Hoaks":
                     st.markdown("Penjelasan perbedaan hasil prediksi dan interpretasi:")
                     st.info(result.get("penjelasan_koreksi", "Tidak tersedia."))
 
-                hasil_dict = {
+                hasil_baru = pd.DataFrame([{ 
                     "Input": user_input,
                     "Preprocessed": processed,
                     "Prediksi Model": pred_label,
@@ -149,14 +150,15 @@ if selected == "Deteksi Hoaks":
                     "Ringkasan Berita": result.get("ringkasan"),
                     "Perbandingan": result.get("perbandingan_kebenaran"),
                     "Penjelasan Koreksi": result.get("penjelasan_koreksi")
-                }
+                }])
 
-                db.reference("hasil_prediksi").push(hasil_dict)
+                # Simpan ke Firebase Realtime Database
+                ref = db.reference("hasil_prediksi")
+                ref.push(hasil_baru.to_dict(orient="records")[0])
 
-                hasil_baru = pd.DataFrame([hasil_dict])
                 hasil_baru.to_csv("hasil_prediksi.csv", mode="a", index=False, header=not os.path.exists("hasil_prediksi.csv"))
                 hasil_semua.append(hasil_baru)
-                st.success("Hasil disimpan ke Firebase dan file lokal.")
+                st.success("Hasil disimpan ke `hasil_prediksi.csv` dan Firebase")
 
             except Exception as e:
                 st.error(f"❌ Terjadi kesalahan saat menggunakan LLM:\n{e}")
