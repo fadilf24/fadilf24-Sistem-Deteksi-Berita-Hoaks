@@ -22,7 +22,7 @@ st.set_page_config(page_title="Deteksi Berita Hoaks", page_icon="🔎", layout="
 
 # Inisialisasi Firebase
 if not firebase_admin._apps:
-    firebase_cred = json.loads(st.secrets["FIREBASE_KEY"])
+    firebase_cred = st.secrets["FIREBASE_KEY"]
     cred = credentials.Certificate(firebase_cred)
     firebase_admin.initialize_app(cred, {
         "databaseURL": "https://deteksi-hoaks-streamlit-default-rtdb.firebaseio.com/"
