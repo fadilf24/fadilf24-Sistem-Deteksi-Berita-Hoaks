@@ -1,3 +1,5 @@
+# ✅ Penyesuaian app.py dengan Use Case 1–3 dan Black Box Testing
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -19,10 +21,11 @@ from preprocessing import preprocess_text, preprocess_dataframe, load_and_clean_
 from feature_extraction import combine_text_columns, tfidf_transform
 from interpretation import configure_gemini, analyze_with_gemini
 
+# ✅ Konfigurasi Halaman Streamlit
 st.set_page_config(page_title="Deteksi Berita Hoaks", page_icon="🔎", layout="wide")
 
-# Konfigurasi Firebase
-firebase_cred = dict(st.secrets["FIREBASE_KEY"])  # 💡 konversi ke dict
+# ✅ Konfigurasi Firebase
+firebase_cred = dict(st.secrets["FIREBASE_KEY"])
 if not firebase_admin._apps:
     cred = credentials.Certificate(firebase_cred)
     firebase_admin.initialize_app(cred, {
@@ -37,14 +40,12 @@ def read_predictions_from_firebase():
     try:
         ref = db.reference("prediksi_hoaks")
         data = ref.get()
-        if data:
-            return pd.DataFrame(data.values())
-        else:
-            return pd.DataFrame()
+        return pd.DataFrame(data.values()) if data else pd.DataFrame()
     except Exception as e:
         st.error(f"Gagal membaca data dari Firebase: {e}")
         return pd.DataFrame()
 
+# ✅ Sidebar Navigasi
 with st.sidebar:
     selected = option_menu(
         menu_title=None,
@@ -58,9 +59,7 @@ st.title("📰 Deteksi Berita Hoaks (Naive Bayes + LLM)")
 
 @st.cache_data
 def load_dataset():
-    df1 = pd.read_csv("Data_latih.csv")
-    df2 = pd.read_csv("detik_data.csv")
-    return df1, df2
+    return pd.read_csv("Data_latih.csv"), pd.read_csv("detik_data.csv")
 
 @st.cache_data
 def prepare_data(df1, df2):
@@ -78,18 +77,15 @@ def extract_features_and_model(df):
     X, vectorizer = tfidf_transform(df["gabungan"])
     y = df["label"]
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    model = MultinomialNB()
-    model.fit(X_train, y_train)
+    model = MultinomialNB().fit(X_train, y_train)
     y_pred = model.predict(X_test)
     return model, vectorizer, X_test, y_test, y_pred
-
-def safe_text(text):
-    return text.encode("latin-1", errors="replace").decode("latin-1")
 
 def is_valid_text(text):
     words = re.findall(r'\w+', text)
     return len(words) >= 5 and any(len(word) > 3 for word in words)
 
+# ✅ Load Data dan Model
 try:
     df1, df2 = load_dataset()
     df = prepare_data(df1, df2)
@@ -100,6 +96,7 @@ except Exception as e:
 
 hasil_semua = []
 
+# Input Data
 if selected == "Deteksi Hoaks":
     st.subheader("Masukkan Teks Berita:")
     user_input = st.text_area("Contoh: Pemerintah mengumumkan vaksin palsu beredar di Jakarta...", height=200)
@@ -118,42 +115,21 @@ if selected == "Deteksi Hoaks":
                 label_map = {1: "Hoax", 0: "Non-Hoax"}
                 pred_label = label_map[prediction]
 
+            # Proses Prediksi dan Analisis LLM
             st.success(f"Prediksi: **{pred_label}**")
 
             st.subheader("Keyakinan Model:")
-            df_proba = pd.DataFrame({
-                "Label": ["Non-Hoax", "Hoax"],
-                "Probabilitas": probas
-            })
-            fig = px.pie(
-                df_proba,
-                names="Label",
-                values="Probabilitas",
-                title="Distribusi Probabilitas Prediksi",
-                color_discrete_sequence=["green", "red"]
-            )
+            df_proba = pd.DataFrame({"Label": ["Non-Hoax", "Hoax"], "Probabilitas": probas})
+            fig = px.pie(df_proba, names="Label", values="Probabilitas", title="Distribusi Probabilitas Prediksi",
+                         color_discrete_sequence=["green", "red"])
             st.plotly_chart(fig, use_container_width=True)
 
             try:
-                result = analyze_with_gemini(
-                    text=user_input,
-                    predicted_label=pred_label,
-                    used_links=[],
-                    distribution={
-                        "Non-Hoax": f"{probas[0]*100:.1f}",
-                        "Hoax": f"{probas[1]*100:.1f}"
-                    }
-                )
-
+                result = analyze_with_gemini(text=user_input, predicted_label=pred_label, used_links=[],
+                                             distribution={"Non-Hoax": f"{probas[0]*100:.1f}", "Hoax": f"{probas[1]*100:.1f}"})
+                # Lihat Hasil
                 with st.expander("Hasil Interpretasi LLM"):
                     st.write(result.get('output_mentah', 'Tidak tersedia'))
-
-                if result.get("perbandingan_kebenaran") == "sesuai":
-                    st.success("Interpretasi LLM **sesuai** dengan prediksi model.")
-                else:
-                    st.warning("⚠ Interpretasi LLM **berbeda** dari prediksi model.")
-                    st.markdown("Penjelasan perbedaan hasil prediksi dan interpretasi:")
-                    st.info(result.get("penjelasan_koreksi", "Tidak tersedia."))
 
                 hasil_baru = {
                     "Input": user_input,
@@ -180,19 +156,14 @@ if selected == "Deteksi Hoaks":
         csv = df_hasil.to_csv(index=False).encode('utf-8')
         st.download_button("⬇️ Unduh Hasil (.csv)", data=csv, file_name="hasil_deteksi_berita.csv", mime="text/csv")
 
+# ✅ Menu Tambahan
 elif selected == "Dataset":
-    st.subheader("Dataset Kaggle:")
-    st.dataframe(df1.head())
-    st.subheader("Dataset Detik.com:")
-    st.dataframe(df2.head())
     st.subheader("Dataset Gabungan:")
     st.dataframe(df[["T_judul", "T_konten", "label"]].head())
 
 elif selected == "Preprocessing":
     st.subheader("Hasil Preprocessing:")
-    st.dataframe(df[["T_judul", "T_konten"]].head())
-    st.subheader("Gabungan Judul + Konten:")
-    st.dataframe(df[["gabungan"]].head())
+    st.dataframe(df[["T_judul", "T_konten", "gabungan"]].head())
 
 elif selected == "Evaluasi Model":
     st.subheader("Evaluasi Model Naive Bayes")
@@ -209,48 +180,24 @@ elif selected == "Evaluasi Model":
     hasil_count = df_eval["Hasil"].value_counts().reset_index()
     hasil_count.columns = ["Hasil", "Jumlah"]
 
-    fig_eval = px.pie(
-        hasil_count,
-        names="Hasil",
-        values="Jumlah",
-        title="Distribusi Prediksi Benar vs Salah",
-        color_discrete_sequence=px.colors.sequential.RdBu
-    )
+    fig_eval = px.pie(hasil_count, names="Hasil", values="Jumlah", title="Distribusi Prediksi Benar vs Salah",
+                      color_discrete_sequence=px.colors.sequential.RdBu)
     st.plotly_chart(fig_eval, use_container_width=True)
 
     st.subheader("Contoh Data Salah Prediksi:")
     salah = df_eval[df_eval["Hasil"] == "Salah"]
-    if not salah.empty:
-        st.dataframe(salah.head())
-    else:
-        st.success("Semua prediksi benar!")
+    st.dataframe(salah.head() if not salah.empty else pd.DataFrame([{"Info": "Semua prediksi benar!"}]))
 
 elif selected == "Riwayat Prediksi":
-    st.subheader("Riwayat Prediksi yang Disimpan di Firebase")
+    st.subheader("Riwayat Prediksi dari Firebase")
     df_riwayat = read_predictions_from_firebase()
-
     if not df_riwayat.empty:
-        # Tentukan urutan kolom yang diinginkan (tanpa timestamp)
-        urutan_kolom = [
-            "Input",
-            "Preprocessed",
-            "Prediksi Model",
-            "Probabilitas Non-Hoax",
-            "Probabilitas Hoax",
-            "Kebenaran LLM",
-            "Alasan LLM",
-            "Ringkasan Berita",
-            "Perbandingan",
-            "Penjelasan Koreksi"
-        ]
-        # Tampilkan hanya kolom yang tersedia
-        kolom_tersedia = [col for col in urutan_kolom if col in df_riwayat.columns]
-        df_riwayat = df_riwayat[kolom_tersedia]
-
-        # Tampilkan data dan unduhan
-        st.dataframe(df_riwayat)
+        kolom_utama = [
+            "Input", "Preprocessed", "Prediksi Model", "Probabilitas Non-Hoax", "Probabilitas Hoax",
+            "Kebenaran LLM", "Alasan LLM", "Ringkasan Berita", "Perbandingan", "Penjelasan Koreksi"]
+        tampilkan = [col for col in kolom_utama if col in df_riwayat.columns]
+        st.dataframe(df_riwayat[tampilkan])
         csv_data = df_riwayat.to_csv(index=False).encode("utf-8")
         st.download_button("⬇️ Unduh Riwayat (.csv)", data=csv_data, file_name="riwayat_prediksi_firebase.csv", mime="text/csv")
     else:
         st.info("Belum ada data prediksi yang disimpan.")
-
