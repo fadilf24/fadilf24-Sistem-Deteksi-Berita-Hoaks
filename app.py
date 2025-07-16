@@ -1,5 +1,3 @@
-# ✅ Penyesuaian app.py dengan Use Case 1–3 dan Black Box Testing
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -9,6 +7,8 @@ import io
 import re
 import json
 import uuid
+from datetime import datetime
+import pytz
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import classification_report, accuracy_score
@@ -21,7 +21,6 @@ from preprocessing import preprocess_text, preprocess_dataframe, load_and_clean_
 from feature_extraction import combine_text_columns, tfidf_transform
 from interpretation import configure_gemini, analyze_with_gemini
 
-# ✅ Konfigurasi Halaman Streamlit
 st.set_page_config(page_title="Deteksi Berita Hoaks", page_icon="🔎", layout="wide")
 
 # ✅ Konfigurasi Firebase
@@ -33,6 +32,10 @@ if not firebase_admin._apps:
     })
 
 def simpan_ke_firebase(data):
+    # Tambahkan timestamp WIB
+    tz = pytz.timezone("Asia/Jakarta")
+    waktu_wib = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
+    data["timestamp"] = waktu_wib
     ref = db.reference("prediksi_hoaks")
     ref.child(str(uuid.uuid4())).set(data)
 
@@ -96,7 +99,7 @@ except Exception as e:
 
 hasil_semua = []
 
-# Input Data
+# ✅ Menu Deteksi Hoaks
 if selected == "Deteksi Hoaks":
     st.subheader("Masukkan Teks Berita:")
     user_input = st.text_area("Contoh: Pemerintah mengumumkan vaksin palsu beredar di Jakarta...", height=200)
@@ -115,7 +118,6 @@ if selected == "Deteksi Hoaks":
                 label_map = {1: "Hoax", 0: "Non-Hoax"}
                 pred_label = label_map[prediction]
 
-            # Proses Prediksi dan Analisis LLM
             st.success(f"Prediksi: **{pred_label}**")
 
             st.subheader("Keyakinan Model:")
@@ -127,7 +129,6 @@ if selected == "Deteksi Hoaks":
             try:
                 result = analyze_with_gemini(text=user_input, predicted_label=pred_label, used_links=[],
                                              distribution={"Non-Hoax": f"{probas[0]*100:.1f}", "Hoax": f"{probas[1]*100:.1f}"})
-                # Lihat Hasil
                 with st.expander("Hasil Interpretasi LLM"):
                     st.write(result.get('output_mentah', 'Tidak tersedia'))
 
@@ -156,15 +157,17 @@ if selected == "Deteksi Hoaks":
         csv = df_hasil.to_csv(index=False).encode('utf-8')
         st.download_button("⬇️ Unduh Hasil (.csv)", data=csv, file_name="hasil_deteksi_berita.csv", mime="text/csv")
 
-# ✅ Menu Tambahan
+# ✅ Menu Dataset
 elif selected == "Dataset":
     st.subheader("Dataset Gabungan:")
     st.dataframe(df[["T_judul", "T_konten", "label"]].head())
 
+# ✅ Menu Preprocessing
 elif selected == "Preprocessing":
     st.subheader("Hasil Preprocessing:")
     st.dataframe(df[["T_judul", "T_konten", "gabungan"]].head())
 
+# ✅ Menu Evaluasi Model
 elif selected == "Evaluasi Model":
     st.subheader("Evaluasi Model Naive Bayes")
     acc = accuracy_score(y_test, y_pred)
@@ -179,7 +182,6 @@ elif selected == "Evaluasi Model":
     df_eval["Hasil"] = np.where(df_eval["Actual"] == df_eval["Predicted"], "Benar", "Salah")
     hasil_count = df_eval["Hasil"].value_counts().reset_index()
     hasil_count.columns = ["Hasil", "Jumlah"]
-
     fig_eval = px.pie(hasil_count, names="Hasil", values="Jumlah", title="Distribusi Prediksi Benar vs Salah",
                       color_discrete_sequence=px.colors.sequential.RdBu)
     st.plotly_chart(fig_eval, use_container_width=True)
@@ -188,13 +190,15 @@ elif selected == "Evaluasi Model":
     salah = df_eval[df_eval["Hasil"] == "Salah"]
     st.dataframe(salah.head() if not salah.empty else pd.DataFrame([{"Info": "Semua prediksi benar!"}]))
 
+# ✅ Menu Riwayat Prediksi
 elif selected == "Riwayat Prediksi":
     st.subheader("Riwayat Prediksi dari Firebase")
     df_riwayat = read_predictions_from_firebase()
     if not df_riwayat.empty:
         kolom_utama = [
-            "Input", "Preprocessed", "Prediksi Model", "Probabilitas Non-Hoax", "Probabilitas Hoax",
-            "Kebenaran LLM", "Alasan LLM", "Ringkasan Berita", "Perbandingan", "Penjelasan Koreksi"]
+            "Input", "Prediksi Model", "Probabilitas Non-Hoax", "Probabilitas Hoax",
+            "Kebenaran LLM", "Alasan LLM", "Ringkasan Berita", "Perbandingan", "Penjelasan Koreksi"
+        ]
         tampilkan = [col for col in kolom_utama if col in df_riwayat.columns]
         st.dataframe(df_riwayat[tampilkan])
         csv_data = df_riwayat.to_csv(index=False).encode("utf-8")
