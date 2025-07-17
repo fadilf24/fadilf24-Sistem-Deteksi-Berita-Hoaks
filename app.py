@@ -192,7 +192,7 @@ elif selected == "Evaluasi Model":
 
 # ✅ Menu Riwayat Prediksi
 elif selected == "Riwayat Prediksi":
-    st.subheader("Riwayat Prediksi dari Firebase")
+    st.subheader("Riwayat Prediksi")
     df_riwayat = read_predictions_from_firebase()
     if not df_riwayat.empty:
         kolom_utama = [
