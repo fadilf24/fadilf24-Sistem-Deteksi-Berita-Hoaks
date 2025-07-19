@@ -159,13 +159,16 @@ if selected == "Deteksi Hoaks":
 
 # ✅ Menu Dataset
 elif selected == "Dataset":
-    st.subheader("Dataset Gabungan:")
-    st.dataframe(df[["T_judul", "T_konten", "label"]].head())
+    st.subheader("Dataset Kaggle:")
+    st.dataframe(df1)
+    st.subheader("Dataset Detik.com:")
+    st.dataframe(df2)
 
 # ✅ Menu Preprocessing
 elif selected == "Preprocessing":
     st.subheader("Hasil Preprocessing:")
-    st.dataframe(df[["T_judul", "T_konten", "gabungan"]].head())
+    st.dataframe(df[["T_judul", "T_konten", "gabungan"]]
+#preprocessingnya pertahap
 
 # ✅ Menu Evaluasi Model
 elif selected == "Evaluasi Model":
