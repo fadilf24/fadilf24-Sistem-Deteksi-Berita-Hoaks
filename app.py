@@ -167,7 +167,7 @@ elif selected == "Dataset":
 # ✅ Menu Preprocessing
 elif selected == "Preprocessing":
     st.subheader("Hasil Preprocessing:")
-    st.dataframe(df[["T_judul", "T_konten", "gabungan"]]
+    st.dataframe(df[["T_judul", "T_konten", "gabungan"]])
 #preprocessingnya pertahap
 
 # ✅ Menu Evaluasi Model
