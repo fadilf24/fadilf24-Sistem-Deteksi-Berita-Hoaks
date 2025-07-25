@@ -1,114 +1,76 @@
-import re
 import pandas as pd
 import numpy as np
+import re
+import nltk
 from nltk.tokenize import wordpunct_tokenize
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
-from Sastrawi.StopWordRemover.StopWordRemoverFactory import StopWordRemoverFactory
+from nltk.corpus import stopwords
 
-# -------------------------------------------
-# Inisialisasi: Stopword & Stemmer
-# -------------------------------------------
-def init_stopwords():
-    factory = StopWordRemoverFactory()
-    return set(factory.get_stop_words())
+# Pastikan stopwords Bahasa Indonesia tersedia
+try:
+    stopword_list = stopwords.words('indonesian')
+except LookupError:
+    nltk.download('stopwords')
+    stopword_list = stopwords.words('indonesian')
 
-def init_stemmer():
-    factory = StemmerFactory()
-    return factory.create_stemmer()
-
-stop_words = init_stopwords()
-stemmer = init_stemmer()
-
-# -------------------------------------------
-# Tahapan 6-11: Pembersihan dan Normalisasi
-# -------------------------------------------
-
-def cleansing(text):
-    """Menghapus URL, angka, simbol, dan karakter non-huruf."""
-    text = re.sub(r'http\S+|www\S+|https\S+', '', text)
-    text = re.sub(r'\d+', '', text)
-    text = re.sub(r'[^\w\s]', '', text)
-    text = re.sub(r'[^a-zA-Z\s]', '', text)
-    text = re.sub(r'\s+', ' ', text).strip()
-    return text.lower()  # (7) Case folding
-
-def remove_stopwords(tokens):
-    return [word for word in tokens if word not in stop_words]
-
-def stemming_tokens(tokens):
-    kalimat = ' '.join(tokens)
-    hasil = stemmer.stem(kalimat)
-    return hasil.split()
-
-def filter_token_length(tokens, min_len=4, max_len=25):
-    return [token for token in tokens if min_len <= len(token) <= max_len]
-
-# -------------------------------------------
-# Fungsi Preprocessing Utama (6-11)
-# -------------------------------------------
-
-def preprocess_text(text):
-    """Melakukan preprocessing lengkap terhadap 1 teks."""
-    if not isinstance(text, str):
-        text = str(text)
-    text = cleansing(text)  # (6 + 7)
-    tokens = wordpunct_tokenize(text)  # (8) Tokenizing
-    tokens = remove_stopwords(tokens)  # (9)
-    tokens = stemming_tokens(tokens)   # (10)
-    tokens = filter_token_length(tokens)  # (11)
-    return ' '.join(tokens)
-
-# -------------------------------------------
-# Fungsi Gabungan Dataset (1-5)
-# -------------------------------------------
+factory = StemmerFactory()
+stemmer = factory.create_stemmer()
 
 def load_and_clean_data(df1, df2):
-    """
-    1. Penambahan atribut label untuk dataset Detik
-    2. Pemilihan atribut yang akan digunakan
-    3. Penyesuaian nama kolom
-    4. Penggabungan dataset
-    5. Penambahan atribut text (judul + narasi)
-    """
-
-    # (3) Normalisasi nama kolom
-    kolom_alias = {
+    # Ubah nama kolom agar seragam
+    df2 = df2.rename(columns={
         'Judul': 'judul',
+        'Isi': 'narasi',
+        'Konten': 'narasi',
         'T_judul': 'judul',
         'T_isi': 'narasi',
-        'Konten': 'narasi',
-        'Isi': 'narasi',
-        'Label': 'label',
-        'T_label': 'label'
-    }
-    df1.rename(columns=kolom_alias, inplace=True)
-    df2.rename(columns=kolom_alias, inplace=True)
+        'T_label': 'label',
+        'Label': 'label'
+    })
 
-    # (1) Penambahan label manual jika belum ada (misalnya dataset Detik)
+    # ✅ Tambahkan kolom 'label' jika tidak tersedia
     if 'label' not in df2.columns:
-        df2['label'] = 'non-hoaks'  # Misalnya data dari detik diasumsikan valid
+        df2['label'] = 'non-hoaks'
 
-    # (4) Gabungkan kedua dataset
+    # Ambil hanya kolom yang relevan
+    expected_cols = ['judul', 'narasi', 'label']
+    df2 = df2[[col for col in expected_cols if col in df2.columns]]
+
+    # Gabungkan df1 dan df2
     df = pd.concat([df1, df2], ignore_index=True)
 
-    # (2) Hapus kolom yang tidak relevan
+    # Hapus kolom yang tidak diperlukan jika ada
     kolom_tidak_dipakai = ['ID', 'Tanggal', 'tanggal', 'Link', 'nama file gambar']
-    df.drop(columns=[col for col in kolom_tidak_dipakai if col in df.columns], errors='ignore', inplace=True)
+    df.drop(columns=[col for col in kolom_tidak_dipakai if col in df.columns], inplace=True, errors='ignore')
 
-    # (2) Ganti tanda '?' dengan NaN jika ada
+    # Bersihkan tanda tanya atau karakter tidak valid
     for col in df.select_dtypes(include='object').columns:
         df[col] = df[col].replace('?', np.nan)
 
-    # (2) Hapus baris yang tidak lengkap
+    # Drop data yang kosong di kolom penting
     df.dropna(subset=['judul', 'narasi', 'label'], inplace=True)
+
     df.reset_index(drop=True, inplace=True)
 
-    # (5) Gabungkan judul + narasi jadi kolom baru 'text'
-    df['judul'] = df['judul'].astype(str)
-    df['narasi'] = df['narasi'].astype(str)
-    df['text'] = df['judul'] + ' ' + df['narasi']
+    return df
 
-    # (6-11) Proses teks menjadi kolom 'T_text'
-    df['T_text'] = df['text'].apply(preprocess_text)
+def clean_text(text):
+    # Lowercase
+    text = text.lower()
 
+    # Hapus URL, angka, simbol, dan karakter aneh
+    text = re.sub(r"http\S+|www\S+|@\S+|#\S+", "", text)
+    text = re.sub(r"[^a-zA-Z\s]", " ", text)
+
+    # Tokenisasi
+    tokens = wordpunct_tokenize(text)
+
+    # Stopword removal dan stemming
+    filtered = [stemmer.stem(word) for word in tokens if word not in stopword_list]
+
+    return " ".join(filtered)
+
+def preprocess_dataframe(df):
+    df['isi_bersih'] = df['judul'] + " " + df['narasi']
+    df['isi_bersih'] = df['isi_bersih'].apply(clean_text)
     return df
