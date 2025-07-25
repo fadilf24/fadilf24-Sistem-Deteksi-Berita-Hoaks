@@ -138,3 +138,39 @@ def preprocess_dataframe(df):
     df["text"] = df["judul"] + " " + df["narasi"]
     df["T_text"] = df["text"].apply(preprocess_text)
     return df
+def preprocess_with_steps(text):
+    """
+    Menjalankan semua tahapan preprocessing dan menyimpan hasil setiap langkah.
+    """
+    if not isinstance(text, str):
+        text = str(text)
+
+    hasil = {}
+
+    # 6. Cleansing
+    cleansed = cleansing(text)
+    hasil["cleansing"] = cleansed
+
+    # 7. Case folding (sudah dilakukan dalam cleansing)
+    hasil["case_folding"] = cleansed.lower()
+
+    # 8. Tokenizing
+    tokens = tokenize(cleansed)
+    hasil["tokenizing"] = tokens
+
+    # 9. Stopword removal
+    no_stopwords = remove_stopwords(tokens)
+    hasil["stopword_removal"] = no_stopwords
+
+    # 10. Stemming
+    stemmed = stemming_tokens(no_stopwords)
+    hasil["stemming"] = stemmed
+
+    # 11. Filter token length
+    filtered = filter_token_length(stemmed)
+    hasil["filter_tokens"] = filtered
+
+    # Hasil akhir
+    hasil["final"] = " ".join(filtered)
+
+    return hasil
