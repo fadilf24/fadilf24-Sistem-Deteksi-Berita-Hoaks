@@ -76,7 +76,7 @@ def prepare_data(df1, df2):
 
 @st.cache_data
 def extract_features_and_model(df):
-    X, vectorizer = tfidf_transform(df["gabungan"])
+    X, vectorizer = tfidf_transform(df["T_text"])
     y = df["label"]
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     model = MultinomialNB().fit(X_train, y_train)
