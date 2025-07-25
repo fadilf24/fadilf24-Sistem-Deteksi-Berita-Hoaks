@@ -32,7 +32,6 @@ if not firebase_admin._apps:
     })
 
 def simpan_ke_firebase(data):
-    # Tambahkan timestamp WIB
     tz = pytz.timezone("Asia/Jakarta")
     waktu_wib = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
     data["timestamp"] = waktu_wib
@@ -166,9 +165,42 @@ elif selected == "Dataset":
 
 # ✅ Menu Preprocessing
 elif selected == "Preprocessing":
-    st.subheader("Hasil Preprocessing:")
-    st.dataframe(df[["T_judul", "T_konten", "gabungan"]])
-#preprocessingnya pertahap
+    st.subheader("🔧 Tahapan Preprocessing Dataset")
+
+    st.markdown("### 1️⃣ Penambahan Atribut Label pada Dataset Detik")
+    st.write("Label manual ditambahkan untuk menandai berita sebagai 'Hoax' atau 'Non-Hoax'.")
+
+    st.markdown("### 2️⃣ Pemilihan Atribut yang Digunakan")
+    st.write("Atribut yang digunakan adalah: `judul`, `isi`, dan `label`.")
+
+    st.markdown("### 3️⃣ Penyesuaian Atribut")
+    st.write("Penyamaan nama kolom dari kedua dataset agar bisa digabungkan.")
+
+    st.markdown("### 4️⃣ Penggabungan Dataset")
+    st.dataframe(df[["judul", "isi", "label"]].head())
+
+    st.markdown("### 5️⃣ Penambahan Atribut Gabungan (judul + isi)")
+    st.dataframe(df[["judul", "isi", "gabungan"]].head())
+
+    st.markdown("### 6️⃣ Cleansing")
+    st.write("Menghapus karakter khusus, simbol, dan URL dari teks.")
+
+    st.markdown("### 7️⃣ Case Folding")
+    st.write("Mengubah semua huruf menjadi huruf kecil.")
+
+    st.markdown("### 8️⃣ Tokenizing")
+    st.write("Memecah teks menjadi potongan kata (token).")
+
+    st.markdown("### 9️⃣ Stopword Removal")
+    st.write("Menghapus kata-kata umum yang tidak memiliki makna penting seperti 'dan', 'yang', dll.")
+
+    st.markdown("### 🔟 Stemming")
+    st.write("Mengubah kata ke bentuk dasarnya menggunakan algoritma stemming.")
+
+    st.markdown("### 1️⃣1️⃣ Filter Tokens")
+    st.write("Memfilter token pendek/tidak penting.")
+
+    st.success("✅ Semua tahap preprocessing telah diterapkan.")
 
 # ✅ Menu Evaluasi Model
 elif selected == "Evaluasi Model":
@@ -195,16 +227,26 @@ elif selected == "Evaluasi Model":
 
 # ✅ Menu Riwayat Prediksi
 elif selected == "Riwayat Prediksi":
-    st.subheader("Riwayat Prediksi")
+    st.subheader("🕒 Riwayat Prediksi")
+
     df_riwayat = read_predictions_from_firebase()
     if not df_riwayat.empty:
+        df_riwayat["timestamp"] = pd.to_datetime(df_riwayat["timestamp"])
+        df_riwayat = df_riwayat.sort_values("timestamp", ascending=False).reset_index(drop=True)
+        df_riwayat.index += 1
+
         kolom_utama = [
             "Input", "Prediksi Model", "Probabilitas Non-Hoax", "Probabilitas Hoax",
-            "Kebenaran LLM", "Alasan LLM", "Ringkasan Berita", "Perbandingan", "Penjelasan Koreksi"
+            "Kebenaran LLM", "Alasan LLM", "Ringkasan Berita", "Perbandingan", "Penjelasan Koreksi", "timestamp"
         ]
         tampilkan = [col for col in kolom_utama if col in df_riwayat.columns]
-        st.dataframe(df_riwayat[tampilkan])
-        csv_data = df_riwayat.to_csv(index=False).encode("utf-8")
+        df_tampil = df_riwayat[tampilkan]
+        df_tampil.insert(0, "No", range(1, len(df_tampil) + 1))
+
+        st.dataframe(df_tampil, use_container_width=True)
+
+        csv_data = df_tampil.to_csv(index=False).encode("utf-8")
         st.download_button("⬇️ Unduh Riwayat (.csv)", data=csv_data, file_name="riwayat_prediksi_firebase.csv", mime="text/csv")
     else:
         st.info("Belum ada data prediksi yang disimpan.")
+perbaiki app.py nya 
