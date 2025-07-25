@@ -1,10 +1,11 @@
 import re
 import pandas as pd
 import numpy as np
-from nltk.tokenize import wordpunct_tokenize  # Tidak perlu unduh punkt
+from nltk.tokenize import wordpunct_tokenize
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 from Sastrawi.StopWordRemover.StopWordRemoverFactory import StopWordRemoverFactory
 
+# Inisialisasi global untuk stemmer dan stopword
 def init_stopwords():
     factory = StopWordRemoverFactory()
     return set(factory.get_stop_words())
@@ -16,9 +17,13 @@ def init_stemmer():
 stop_words = init_stopwords()
 stemmer = init_stemmer()
 
+# -------------------------------------------
+# Pembersihan dan Normalisasi Teks
+# -------------------------------------------
+
 def cleansing(text):
     """
-    Membersihkan teks dari URL, angka, simbol, dan whitespace.
+    Membersihkan teks dari URL, angka, simbol, dan karakter non-huruf.
     """
     text = re.sub(r'http\S+|www\S+|https\S+', '', text)
     text = re.sub(r'\d+', '', text)
@@ -38,10 +43,14 @@ def stemming_tokens(tokens):
 def filter_token_length(tokens, min_len=4, max_len=25):
     return [token for token in tokens if min_len <= len(token) <= max_len]
 
+# -------------------------------------------
+# Fungsi Preprocessing Utama
+# -------------------------------------------
+
 def preprocess_text(text):
     """
-    Preprocessing teks tunggal (user input dari Streamlit).
-    Output: string teks yang sudah bersih.
+    Melakukan semua tahapan preprocessing pada teks tunggal:
+    cleansing → tokenizing → stopword removal → stemming → filtering
     """
     if not isinstance(text, str):
         text = str(text)
@@ -54,37 +63,51 @@ def preprocess_text(text):
 
 def preprocess_dataframe(df):
     """
-    Preprocessing dataframe untuk kolom 'judul' dan 'narasi'.
-    Digabungkan menjadi kolom 'text', lalu diproses menjadi kolom 'T_text'.
+    Melakukan preprocessing dataframe pada kolom judul + narasi → T_text.
+    Digunakan untuk menyiapkan data sebelum TF-IDF dan klasifikasi.
     """
     df['judul'] = df['judul'].astype(str)
     df['narasi'] = df['narasi'].astype(str)
-
     df['text'] = df['judul'] + ' ' + df['narasi']
     df['T_text'] = df['text'].apply(preprocess_text)
-    
     return df
+
+# -------------------------------------------
+# Fungsi Gabung Data
+# -------------------------------------------
 
 def load_and_clean_data(df1, df2):
     """
-    Menggabungkan data dari dua sumber dan membersihkan kolom tidak perlu.
-    Digunakan sebelum TF-IDF dan klasifikasi.
+    Menggabungkan dua dataframe (df1, df2) dan memastikan kolom sesuai:
+    - Menstandarkan kolom df2 jika perlu
+    - Menghapus kolom yang tidak diperlukan
+    - Menggabungkan dan membersihkan NaN
     """
-    df2_renamed = df2.rename(columns={
+    # Rename jika kolom df2 masih menggunakan nama asli
+    expected_columns = ['judul', 'narasi', 'label']
+    df2 = df2.rename(columns={
         'Judul': 'judul',
         'Konten': 'narasi',
-        'Label': 'label'
+        'Isi': 'narasi',
+        'Label': 'label',
+        'T_judul': 'judul',
+        'T_isi': 'narasi',
+        'T_label': 'label'
     })
 
-    kolom_tidak_dipakai = ['ID', 'Tanggal', 'tanggal', 'Link', 'nama file gambar']
-    df = pd.concat([df1, df2_renamed], ignore_index=True)
+    # Gabungkan dataframe
+    df = pd.concat([df1, df2], ignore_index=True)
 
+    # Hapus kolom tidak penting jika ada
+    kolom_tidak_dipakai = ['ID', 'Tanggal', 'tanggal', 'Link', 'nama file gambar']
     df = df.drop(columns=[col for col in kolom_tidak_dipakai if col in df.columns], errors='ignore')
 
+    # Ganti tanda '?' jadi NaN jika ada
     for col in df.select_dtypes(include='object').columns:
         df[col] = df[col].replace('?', np.nan)
 
-    df = df.dropna(subset=['judul', 'narasi', 'label'])
-    
-    df['text'] = df['judul'].astype(str) + ' ' + df['narasi'].astype(str)
+    # Drop baris yang tidak lengkap
+    df.dropna(subset=['judul', 'narasi', 'label'], inplace=True)
+    df.reset_index(drop=True, inplace=True)
+
     return df
