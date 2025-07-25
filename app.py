@@ -163,44 +163,52 @@ elif selected == "Dataset":
     st.subheader("Dataset Detik.com:")
     st.dataframe(df2)
 
-# ✅ Menu Preprocessing
 elif selected == "Preprocessing":
     st.subheader("🔧 Tahapan Preprocessing Dataset")
 
     st.markdown("### 1️⃣ Penambahan Atribut Label pada Dataset Detik")
-    st.write("Label manual ditambahkan untuk menandai berita sebagai atau 'Non-Hoax'.")
+    st.write("Label otomatis ditambahkan dengan nilai `Non-Hoax` jika tidak tersedia.")
+    st.dataframe(df2.head())
 
     st.markdown("### 2️⃣ Pemilihan Atribut yang Digunakan")
-    st.write("Atribut yang digunakan adalah: `judul`, `isi`, dan `label`.")
+    st.write("Atribut: `judul`, `narasi`, dan `label`.")
 
     st.markdown("### 3️⃣ Penyesuaian Atribut")
-    st.write("Penyamaan nama kolom dari kedua dataset agar bisa digabungkan.")
+    st.write("Nama-nama kolom disamakan: `Judul` → `judul`, `Isi` / `Konten` → `narasi`, dsb.")
 
-    st.markdown("### 4️⃣ Penggabungan Dataset")
-    st.dataframe(df[["judul", "narasi", "label"]].head())
+    st.markdown("### 4️⃣ Penggabungan Dataset df1 + df2")
+    st.dataframe(df[["judul", "narasi", "label"]].head(), use_container_width=True)
 
-    st.markdown("### 5️⃣ Penambahan Atribut Gabungan (judul + narasi)")
-    st.dataframe(df[["judul", "narasi", "gabungan"]].head())
+    st.markdown("### 5️⃣ Penambahan Atribut `text` (Gabungan Judul + Narasi)")
+    st.dataframe(df[["text"]].head(), use_container_width=True)
+
+    st.markdown("### 🔎 Contoh Proses Lengkap Preprocessing")
+    contoh_teks = df["text"].iloc[0]
+    hasil = preprocess_with_steps(contoh_teks)
 
     st.markdown("### 6️⃣ Cleansing")
-    st.write("Menghapus karakter khusus, simbol, dan URL dari teks.")
+    st.write(hasil["cleansing"])
 
     st.markdown("### 7️⃣ Case Folding")
-    st.write("Mengubah semua huruf menjadi huruf kecil.")
+    st.write(hasil["case_folding"])
 
     st.markdown("### 8️⃣ Tokenizing")
-    st.write("Memecah teks menjadi potongan kata (token).")
+    st.write(hasil["tokenizing"])
 
     st.markdown("### 9️⃣ Stopword Removal")
-    st.write("Menghapus kata-kata umum yang tidak memiliki makna penting seperti 'dan', 'yang', dll.")
+    st.write(hasil["stopword_removal"])
 
     st.markdown("### 🔟 Stemming")
-    st.write("Mengubah kata ke bentuk dasarnya menggunakan algoritma stemming.")
+    st.write(hasil["stemming"])
 
     st.markdown("### 1️⃣1️⃣ Filter Tokens")
-    st.write("Memfilter token pendek/tidak penting.")
+    st.write(hasil["filter_tokens"])
 
-    st.success("✅ Semua tahap preprocessing telah diterapkan.")
+    st.markdown("### ✅ Hasil Akhir (`T_text`)")
+    st.write(hasil["final"])
+
+    st.success("✅ Semua tahap preprocessing telah ditampilkan untuk 1 contoh data.")
+
 
 # ✅ Menu Evaluasi Model
 elif selected == "Evaluasi Model":
