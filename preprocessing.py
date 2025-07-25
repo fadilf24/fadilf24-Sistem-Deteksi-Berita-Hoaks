@@ -88,10 +88,15 @@ def preprocess_text(text):
 def load_and_clean_data(df1, df2):
     """
     Menggabungkan dan membersihkan dua dataset:
+    - Tambah label 'Non-Hoax' jika kolom label belum ada
     - Penyesuaian nama kolom
     - Hapus kolom tidak penting
     - Hapus baris dengan data kosong
     """
+    # Tambahkan kolom label jika belum ada
+    if 'label' not in df2.columns:
+        df2['label'] = 'Non-Hoax'
+
     # Penyesuaian nama kolom df2
     df2 = df2.rename(columns={
         "Judul": "judul",
