@@ -63,17 +63,17 @@ Teks Berita:
     llm_label_clean = kebenaran_val.lower() if kebenaran_val else ""
     perbandingan = "sesuai" if pred_label_clean == llm_label_clean else "berbeda"
 
-    # Penjelasan koreksi yang ramah pengguna umum
+    # Penjelasan koreksi versi ramah pengguna
     penjelasan_koreksi = None
     if perbandingan == "berbeda":
         penjelasan_koreksi = (
             f"Model otomatis memprediksi bahwa berita ini adalah **{predicted_label}**, "
-            f"namun hasil analisis dari LLM (Large Language Model) menyatakan bahwa berita ini termasuk **{kebenaran_val}**.\n\n"
-            f"Perbedaan ini bisa terjadi karena model otomatis seperti Naïve Bayes hanya menganalisis pola dan frekuensi kata dalam teks, "
-            f"tanpa memahami makna atau konteks isi berita.\n\n"
-            f"Sebaliknya, LLM mampu memahami bahasa secara lebih dalam, termasuk logika kalimat dan fakta umum. "
-            f"Hal ini membuat LLM dapat menilai apakah sebuah berita terdengar masuk akal atau justru mengandung informasi yang menyesatkan.\n\n"
-            f"**Alasan LLM:** {alasan_val or 'Tidak tersedia'}"
+            f"namun hasil analisis oleh kecerdasan buatan (LLM) menyatakan bahwa berita ini termasuk **{kebenaran_val}**.\n\n"
+            f"Perbedaan ini mungkin terjadi karena model otomatis seperti Naive Bayes hanya melihat pola kata dan frekuensi kata dalam teks, "
+            f"tanpa memahami arti atau isi cerita secara menyeluruh.\n\n"
+            f"Sebaliknya, model LLM (Large Language Model) seperti Gemini dapat membaca teks dan memahami maksud dari isi berita, "
+            f"termasuk apakah informasi tersebut terdengar masuk akal atau justru mencurigakan. Dengan kemampuan itu, LLM bisa memberikan analisis yang lebih mendekati pemahaman manusia.\n\n"
+            f"**Alasan dari LLM:** {alasan_val or 'Tidak tersedia'}"
         )
 
     return {
