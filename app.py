@@ -168,7 +168,7 @@ elif selected == "Preprocessing":
     st.subheader("🔧 Tahapan Preprocessing Dataset")
 
     st.markdown("### 1️⃣ Penambahan Atribut Label pada Dataset Detik")
-    st.write("Label manual ditambahkan untuk menandai berita sebagai 'Hoax' atau 'Non-Hoax'.")
+    st.write("Label manual ditambahkan untuk menandai berita sebagai atau 'Non-Hoax'.")
 
     st.markdown("### 2️⃣ Pemilihan Atribut yang Digunakan")
     st.write("Atribut yang digunakan adalah: `judul`, `isi`, dan `label`.")
@@ -177,10 +177,10 @@ elif selected == "Preprocessing":
     st.write("Penyamaan nama kolom dari kedua dataset agar bisa digabungkan.")
 
     st.markdown("### 4️⃣ Penggabungan Dataset")
-    st.dataframe(df[["judul", "isi", "label"]].head())
+    st.dataframe(df[["judul", "narasi", "label"]].head())
 
-    st.markdown("### 5️⃣ Penambahan Atribut Gabungan (judul + isi)")
-    st.dataframe(df[["judul", "isi", "gabungan"]].head())
+    st.markdown("### 5️⃣ Penambahan Atribut Gabungan (judul + narasi)")
+    st.dataframe(df[["judul", "narasi", "gabungan"]].head())
 
     st.markdown("### 6️⃣ Cleansing")
     st.write("Menghapus karakter khusus, simbol, dan URL dari teks.")
