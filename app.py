@@ -17,7 +17,7 @@ from fpdf import FPDF
 import firebase_admin
 from firebase_admin import credentials, db
 
-from preprocessing import preprocess_text, preprocess_dataframe, load_and_clean_data
+from preprocessing import preprocess_text, preprocess_dataframe, load_and_clean_data, preprocess_with_steps
 from feature_extraction import combine_text_columns, tfidf_transform
 from interpretation import configure_gemini, analyze_with_gemini
 
@@ -184,7 +184,7 @@ elif selected == "Preprocessing":
 
     st.markdown("### 🔎 Contoh Proses Lengkap Preprocessing")
     contoh_teks = df["text"].iloc[0]
-    hasil = preprocess_text(contoh_teks)
+    hasil = preprocess_with_steps(contoh_teks)
 
     st.markdown("### 6️⃣ Cleansing")
     st.write(hasil["cleansing"])
