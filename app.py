@@ -185,8 +185,14 @@ elif selected == "Preprocessing":
     st.dataframe(df2.head())
 
     st.markdown("### 2️⃣ Pemilihan Atribut yang Digunakan")
-    st.write("Atribut: `judul`, `narasi`, dan `label`.")
+    st.write("Atribut yang dipilih untuk digunakan dalam analisis adalah: `judul`, `narasi`, dan `label`.")
 
+    st.subheader("📄 Dataset df1 (Hoax)")
+    st.dataframe(df1[["judul", "narasi", "label"]].head())
+
+    st.subheader("📄 Dataset df2 (Non-Hoax)")
+    st.dataframe(df2[["Judul", "Konten", "label"]].head())
+    
     st.markdown("### 3️⃣ Penyesuaian Atribut")
     st.write("Nama-nama kolom disamakan: `Judul` → `judul`, `Isi` / `Konten` → `narasi`, dsb.")
 
