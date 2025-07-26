@@ -173,7 +173,7 @@ elif selected == "Preprocessing":
     st.markdown("### 1️⃣ Penambahan Atribut Label pada Dataset Detik")
     st.write("Menambahkan atribut label pada dataset detik.com.")
 
-# Pastikan label ditambahkan jika belum ada
+    # Tambahkan label jika belum ada
     if 'label' not in df2.columns:
     df2['label'] = 'Non-Hoax'
     st.success("✅ Kolom `label` berhasil ditambahkan ke df2 dengan nilai default 'Non-Hoax'")
