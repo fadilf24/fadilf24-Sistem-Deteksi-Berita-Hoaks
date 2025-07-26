@@ -184,7 +184,7 @@ elif selected == "Preprocessing":
 
     st.markdown("### 🔎 Contoh Proses Lengkap Preprocessing")
     contoh_teks = df["text"].iloc[0]
-    hasil = preprocess_with_steps(contoh_teks)
+    hasil = preprocess_text(contoh_teks)
 
     st.markdown("### 6️⃣ Cleansing")
     st.write(hasil["cleansing"])
