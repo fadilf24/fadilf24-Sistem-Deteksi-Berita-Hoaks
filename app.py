@@ -167,7 +167,7 @@ elif selected == "Preprocessing":
     st.subheader("🔧 Tahapan Preprocessing Dataset")
 
     st.markdown("### 1️⃣ Penambahan Atribut Label pada Dataset Detik")
-    st.write("Label otomatis ditambahkan dengan nilai `Non-Hoax` jika tidak tersedia.")
+    st.write("Menambahkan atribut label pada dataset detik.com.")
     st.dataframe(df2.head())
 
     st.markdown("### 2️⃣ Pemilihan Atribut yang Digunakan")
