@@ -179,12 +179,12 @@ elif selected == "Preprocessing":
         df2['label'] = 'Non-Hoax'
         st.success("✅ Kolom `label` berhasil ditambahkan ke df2 dengan nilai default 'Non-Hoax'")
     else:
-        st.info("ℹ️ Kolom `label` sudah ada di df2, tidak perlu ditambahkan lagi.")
+        st.info(" 1 Kolom `label` sudah ada di df2, tidak perlu ditambahkan lagi.")
 
     # Tampilkan hasilnya
     st.dataframe(df2.head())
 
-    st.markdown("### 2️⃣ Pemilihan Atribut yang Digunakan")
+    st.markdown("### 2️ Pemilihan Atribut yang Digunakan")
     st.write("Atribut yang dipilih untuk digunakan dalam analisis adalah: `judul`, `narasi`, dan `label`.")
 
     st.subheader("📄 Dataset df1 (Hoax)")
@@ -193,41 +193,40 @@ elif selected == "Preprocessing":
     st.subheader("📄 Dataset df2 (Non-Hoax)")
     st.dataframe(df2[["Judul", "Konten", "label"]].head())
     
-    st.markdown("### 3️⃣ Penyesuaian Atribut")
+    st.markdown("### 3️ Penyesuaian Atribut")
     st.write("Nama-nama kolom disamakan: `Judul` → `judul`, `Isi` / `Konten` → `narasi`, dsb.")
 
-    st.markdown("### 4️⃣ Penggabungan Dataset df1 + df2")
+    st.markdown("### 4️ Penggabungan Dataset df1 + df2")
     st.dataframe(df[["judul", "narasi", "label"]].head(), use_container_width=True)
 
-    st.markdown("### 5️⃣ Penambahan Atribut `text` (Gabungan Judul + Narasi)")
+    st.markdown("### 5️ Penambahan Atribut `text` (Gabungan Judul + Narasi)")
     st.dataframe(df[["text"]].head(), use_container_width=True)
 
     st.markdown("### 🔎 Contoh Proses Lengkap Preprocessing")
+
+    # Ambil contoh teks
     contoh_teks = df["text"].iloc[0]
+
+    # Proses preprocessing bertahap
     hasil = preprocess_with_steps(contoh_teks)
 
-    st.markdown("### 6️⃣ Cleansing")
-    st.write(hasil["cleansing"])
+    # Buat list data untuk setiap tahap
+    data = [
+        {"Tahapan Preprocessing": "Cleansing", "Before": contoh_teks, "After": hasil["cleansing"]},
+        {"Tahapan Preprocessing": "Case Folding", "Before": hasil["cleansing"], "After": hasil["case_folding"]},
+        {"Tahapan Preprocessing": "Tokenizing", "Before": hasil["case_folding"], "After": hasil["tokenizing"]},
+        {"Tahapan Preprocessing": "Stopword Removal", "Before": hasil["tokenizing"], "After": hasil["stopword_removal"]},
+        {"Tahapan Preprocessing": "Stemming", "Before": hasil["stopword_removal"], "After": hasil["stemming"]},
+        {"Tahapan Preprocessing": "Filter Tokens", "Before": hasil["stemming"], "After": hasil["filter_tokens"]},
+        {"Tahapan Preprocessing": "Final Result (T_text)", "Before": hasil["filter_tokens"], "After": hasil["final"]},
+    ]
 
-    st.markdown("### 7️⃣ Case Folding")
-    st.write(hasil["case_folding"])
+    # Ubah jadi DataFrame
+    df_steps = pd.DataFrame(data)
 
-    st.markdown("### 8️⃣ Tokenizing")
-    st.write(hasil["tokenizing"])
+    # Tampilkan tabel
+    st.dataframe(df_steps, use_container_width=True)
 
-    st.markdown("### 9️⃣ Stopword Removal")
-    st.write(hasil["stopword_removal"])
-
-    st.markdown("### 🔟 Stemming")
-    st.write(hasil["stemming"])
-
-    st.markdown("### 1️⃣1️⃣ Filter Tokens")
-    st.write(hasil["filter_tokens"])
-
-    st.markdown("### ✅ Hasil Akhir (`T_text`)")
-    st.write(hasil["final"])
-
-    st.success("✅ Semua tahap preprocessing telah ditampilkan untuk 1 contoh data.")
 
 
 # ✅ Menu Evaluasi Model
