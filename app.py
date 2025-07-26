@@ -217,8 +217,8 @@ elif selected == "Preprocessing":
         {"Tahapan Preprocessing": "Tokenizing", "Before": hasil["case_folding"], "After": hasil["tokenizing"]},
         {"Tahapan Preprocessing": "Stopword Removal", "Before": hasil["tokenizing"], "After": hasil["stopword_removal"]},
         {"Tahapan Preprocessing": "Stemming", "Before": hasil["stopword_removal"], "After": hasil["stemming"]},
-        {"Tahapan Preprocessing": "Filter Tokens", "Before": hasil["stemming"], "After": hasil["filter_tokens"]},
-        {"Tahapan Preprocessing": "Final Result (T_text)", "Before": hasil["filter_tokens"], "After": hasil["final"]},
+        {"Tahapan Preprocessing": "Filter Tokens", "Before": hasil["stemming"], "After": hasil["filtering"]},  # ✅ disesuaikan
+        {"Tahapan Preprocessing": "Final Result (T_text)", "Before": hasil["filtering"], "After": hasil["final"]},
     ]
 
     # Ubah jadi DataFrame
