@@ -156,3 +156,16 @@ def preprocess_dataframe(df):
     df["T_text"] = df["text"].apply(preprocess_text)
 
     return df
+
+def preprocess_with_steps(text):
+    hasil = {}
+    
+    hasil['original'] = text
+    hasil['cleansing'] = cleansing(text)
+    hasil['case_folding'] = case_folding(hasil['cleansing'])
+    hasil['tokenizing'] = tokenizing(hasil['case_folding'])
+    hasil['stopword_removal'] = stopword_removal(hasil['tokenizing'])
+    hasil['stemming'] = stemming(hasil['stopword_removal'])
+    hasil['filtering'] = filter_tokens(hasil['stemming'])
+
+    return hasil
