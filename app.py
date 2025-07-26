@@ -26,10 +26,14 @@ st.set_page_config(page_title="Deteksi Berita Hoaks", page_icon="🔎", layout="
 # ✅ Konfigurasi Firebase
 firebase_cred = dict(st.secrets["FIREBASE_KEY"])
 if not firebase_admin._apps:
+    print("Initializing Firebase...")
+    firebase_cred = dict(st.secrets["FIREBASE_KEY"])
     cred = credentials.Certificate(firebase_cred)
     firebase_admin.initialize_app(cred, {
         'databaseURL': "https://deteksi-hoaks-streamlit-default-rtdb.asia-southeast1.firebasedatabase.app/"
     })
+else:
+    print("Firebase already initialized.")
 
 def simpan_ke_firebase(data):
     tz = pytz.timezone("Asia/Jakarta")
