@@ -172,7 +172,17 @@ elif selected == "Preprocessing":
 
     st.markdown("### 1️⃣ Penambahan Atribut Label pada Dataset Detik")
     st.write("Menambahkan atribut label pada dataset detik.com.")
-    st.dataframe(df2[["judul", "narasi", "label"]].head())
+
+# Pastikan label ditambahkan jika belum ada
+    if 'label' not in df2.columns:
+    df2['label'] = 'Non-Hoax'
+    st.success("✅ Kolom `label` berhasil ditambahkan ke df2 dengan nilai default 'Non-Hoax'")
+    else:
+    st.info("ℹ️ Kolom `label` sudah ada di df2, tidak perlu ditambahkan lagi.")
+
+# Tampilkan hasil df2 setelah penambahan label
+    st.write("Contoh data setelah penambahan atribut label:")
+    st.dataframe(df2[["judul", "narasi", "label"]].head(), use_container_width=True)
 
     st.markdown("### 2️⃣ Pemilihan Atribut yang Digunakan")
     st.write("Atribut: `judul`, `narasi`, dan `label`.")
