@@ -168,7 +168,7 @@ elif selected == "Preprocessing":
 
     st.markdown("### 1️⃣ Penambahan Atribut Label pada Dataset Detik")
     st.write("Menambahkan atribut label pada dataset detik.com.")
-    st.dataframe(df2.head())
+    st.dataframe(df2[["judul", "narasi", "label"]].head())
 
     st.markdown("### 2️⃣ Pemilihan Atribut yang Digunakan")
     st.write("Atribut: `judul`, `narasi`, dan `label`.")
