@@ -28,28 +28,34 @@ def cleansing(text):
     """
     Tahap 6: Cleansing - Membersihkan teks dari URL, angka, simbol, dan karakter non-alfabet.
     """
-    text = re.sub(r"http\S+|www\S+|https\S+", "", text)  # Hapus URL
-    text = re.sub(r"\d+", "", text)                     # Hapus angka
-    text = re.sub(r"[^\w\s]", "", text)                 # Hapus simbol
-    text = re.sub(r"[^a-zA-Z\s]", "", text)             # Hapus karakter non-alfabet
-    text = re.sub(r"\s+", " ", text).strip()            # Hapus spasi berlebih
-    return text.lower()                                 # Tahap 7: Case folding
+    text = re.sub(r"http\S+|www\S+|https\S+", "", text)
+    text = re.sub(r"\d+", "", text)
+    text = re.sub(r"[^\w\s]", "", text)
+    text = re.sub(r"[^a-zA-Z\s]", "", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
+def case_folding(text):
+    """
+    Tahap 7: Case folding - Mengubah teks menjadi huruf kecil.
+    """
+    return text.lower()
 
 def tokenize(text):
     """
-    Tahap 8: Tokenizing - Tokenisasi kata menggunakan wordpunct_tokenize.
+    Tahap 8: Tokenizing - Memecah teks menjadi token.
     """
     return wordpunct_tokenize(text)
 
 def remove_stopwords(tokens):
     """
-    Tahap 9: Stopword removal - Menghapus kata-kata umum yang tidak bermakna penting.
+    Tahap 9: Stopword Removal - Menghapus kata-kata umum.
     """
     return [word for word in tokens if word not in stop_words]
 
 def stemming_tokens(tokens):
     """
-    Tahap 10: Stemming - Mengembalikan kata ke bentuk dasar menggunakan Sastrawi.
+    Tahap 10: Stemming - Mengembalikan kata ke bentuk dasar.
     """
     kalimat = " ".join(tokens)
     hasil_stem = stemmer.stem(kalimat)
@@ -57,24 +63,19 @@ def stemming_tokens(tokens):
 
 def filter_token_length(tokens, min_len=4, max_len=25):
     """
-    Tahap 11: Filter token - Menyaring token berdasarkan panjang huruf.
+    Tahap 11: Filter token berdasarkan panjang karakter.
     """
     return [t for t in tokens if min_len <= len(t) <= max_len]
 
 def preprocess_text(text):
     """
-    Proses lengkap preprocessing teks:
-    6. Cleansing
-    7. Case folding (di dalam cleansing)
-    8. Tokenizing
-    9. Stopword removal
-    10. Stemming
-    11. Filter token panjang
+    Proses gabungan 6-11 untuk kolom DataFrame.
     """
     if not isinstance(text, str):
         text = str(text)
 
     text = cleansing(text)
+    text = case_folding(text)
     tokens = tokenize(text)
     tokens = remove_stopwords(tokens)
     tokens = stemming_tokens(tokens)
@@ -83,25 +84,23 @@ def preprocess_text(text):
     return " ".join(tokens)
 
 # -----------------------------------
-# Fungsi Preprocessing untuk DataFrame
+# Preprocessing untuk DataFrame
 # -----------------------------------
 
 def load_and_clean_data(df1, df2):
     """
-    Proses gabungan data:
-    1. Penambahan atribut label jika belum ada di df2
-    2. Pemilihan atribut: 'judul', 'narasi', 'label'
-    3. Penyesuaian nama kolom
-    4. Penggabungan df1 dan df2
+    Gabungan Dataset:
+    1. Tambah label jika tidak ada
+    2. Pilih kolom penting
+    3. Sesuaikan nama kolom
+    4. Gabungkan dataset
     """
 
-    # 1. Tambahkan kolom label jika belum ada
     if 'label' not in df2.columns:
         df2['label'] = 'Non-Hoax'
     else:
         df2['label'] = df2['label'].fillna('Non-Hoax')
 
-    # 3. Penyesuaian nama kolom df2
     df2 = df2.rename(columns={
         "Judul": "judul",
         "Isi": "narasi",
@@ -112,29 +111,21 @@ def load_and_clean_data(df1, df2):
         "Label": "label"
     })
 
-    # 2. Pilih kolom yang diperlukan
     expected_cols = ["judul", "narasi", "label"]
     df2 = df2[[col for col in expected_cols if col in df2.columns]]
-
-    # Pastikan df1 juga hanya punya kolom yang sama
     df1 = df1[[col for col in expected_cols if col in df1.columns]]
 
-    # Bersihkan kolom duplikat
     df1 = df1.loc[:, ~df1.columns.duplicated()]
     df2 = df2.loc[:, ~df2.columns.duplicated()]
 
-    # 4. Gabungkan kedua DataFrame
     df = pd.concat([df1, df2], ignore_index=True)
 
-    # Hapus kolom tidak penting jika masih ada
     kolom_tidak_dipakai = ["ID", "Tanggal", "tanggal", "Link", "nama file gambar"]
     df = df.drop(columns=[col for col in kolom_tidak_dipakai if col in df.columns], errors="ignore")
 
-    # Bersihkan nilai '?'
     for col in df.select_dtypes(include="object").columns:
         df[col] = df[col].replace("?", np.nan)
 
-    # Drop baris yang tidak lengkap
     df.dropna(subset=["judul", "narasi", "label"], inplace=True)
     df.reset_index(drop=True, inplace=True)
 
@@ -142,28 +133,27 @@ def load_and_clean_data(df1, df2):
 
 def preprocess_dataframe(df):
     """
-    Tahapan lanjutan:
-    5. Buat kolom 'text' dari gabungan 'judul' dan 'narasi'
-    6–11. Lakukan preprocessing ke kolom 'text', simpan ke 'T_text'
+    Gabungkan judul + narasi jadi 'text', lalu buat 'T_text' hasil preprocessing.
     """
     df["judul"] = df["judul"].astype(str)
     df["narasi"] = df["narasi"].astype(str)
 
-    # 5. Gabungkan kolom judul + narasi
     df["text"] = df["judul"] + " " + df["narasi"]
-
-    # 6-11. Terapkan preprocessing
     df["T_text"] = df["text"].apply(preprocess_text)
 
     return df
 
 def preprocess_with_steps(text):
+    """
+    Menampilkan hasil tiap tahapan preprocessing (untuk debug atau edukasi).
+    """
     hasil = {}
     hasil['original'] = text
     hasil['cleansing'] = cleansing(text)
     hasil['case_folding'] = case_folding(hasil['cleansing'])
-    hasil['tokenizing'] = tokenizing(hasil['case_folding'])
-    hasil['stopword_removal'] = stopword_removal(hasil['tokenizing'])
-    hasil['stemming'] = stemming(hasil['stopword_removal'])
-    hasil['filtering'] = filter_tokens(hasil['stemming'])
+    hasil['tokenizing'] = tokenize(hasil['case_folding'])
+    hasil['stopword_removal'] = remove_stopwords(hasil['tokenizing'])
+    hasil['stemming'] = stemming_tokens(hasil['stopword_removal'])
+    hasil['filtering'] = filter_token_length(hasil['stemming'])
+    hasil['final'] = " ".join(hasil['filtering'])
     return hasil
