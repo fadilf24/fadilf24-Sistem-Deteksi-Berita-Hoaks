@@ -182,7 +182,7 @@ elif selected == "Preprocessing":
         st.info("ℹ️ Kolom `label` sudah ada di df2, tidak perlu ditambahkan lagi.")
 
     # Tampilkan hasilnya
-    st.dataframe(df2[["judul", "narasi", "label"]].head())
+    st.dataframe(df2.head())
 
     st.markdown("### 2️⃣ Pemilihan Atribut yang Digunakan")
     st.write("Atribut: `judul`, `narasi`, dan `label`.")
