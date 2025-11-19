@@ -12,6 +12,6 @@ Fitur utama:
 - Klasifikasi berita hoaks atau bukan hoaks
 - Interpretasi prediksi menggunakan LLM
 - Pipeline NLP dari preprocessing hingga prediksi
-- Implementasi mudah untuk skripsi atau penelitian lanjutan
+
 
 ---
