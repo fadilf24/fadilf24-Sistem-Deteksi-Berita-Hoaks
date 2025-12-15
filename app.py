@@ -23,11 +23,7 @@ from preprocessing import (
 from feature_extraction import combine_text_columns, tfidf_transform
 from interpretation import analyze_with_gemini
 
-from classification import (
-    split_data,
-    train_fuzzy_classifier,
-    predict_fuzzy
-)
+from classification import split_data, train_fuzzy_classifier, predict_fuzzy
 
 # =========================
 # 🔹 PAGE CONFIG
@@ -269,3 +265,4 @@ elif selected == "Riwayat Prediksi":
         )
     else:
         st.info("Belum ada data prediksi.")
+
