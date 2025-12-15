@@ -71,9 +71,19 @@ Teks Berita:
     # =========================
     # 🔹 Generate Respons
     # =========================
-    model = genai.GenerativeModel("gemini-2.0-flash")
-    response = model.generate_content(prompt)
-    response_text = response.text.strip()
+    try:
+        model = genai.GenerativeModel("gemini-2.0-flash")
+        response = model.generate_content(prompt)
+        response_text = response.text.strip()
+    except Exception as e:
+        return {
+            "kebenaran": None,
+            "alasan": f"Error Gemini: {str(e)}",
+            "ringkasan": None,
+            "output_mentah": f"Error: {str(e)}",
+            "perbandingan_kebenaran": None,
+            "penjelasan_koreksi": None
+        }
 
     # =========================
     # 🔹 Parsing Respons
@@ -114,8 +124,9 @@ Teks Berita:
     except Exception as e:
         alasan_val = f"Gagal memproses respons LLM: {e}"
 
+    # ✅ FIX: Handle None values untuk perbandingan
     pred_clean = predicted_label.lower().replace("-", " ") if predicted_label else ""
-    llm_clean = kebenaran_val.lower() if kebenaran_val else ""
+    llm_clean = kebenaran_val.lower().replace("-", " ") if kebenaran_val else ""
 
     perbandingan = "sesuai" if pred_clean == llm_clean else "berbeda"
 
@@ -132,6 +143,7 @@ Teks Berita:
             f"pemahaman manusia.\n\n"
             f"**Alasan dari LLM:** {alasan_val or 'Tidak tersedia'}"
         )
+    
     return {
         "kebenaran": kebenaran_val,
         "alasan": alasan_val,
