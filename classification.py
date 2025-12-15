@@ -52,15 +52,14 @@ def predict_fuzzy(
     membership_sum = {cls: 0.0 for cls in classes}
 
     for i in range(X_test.shape[0]):
-        x = X_test[i]
+        x_vec = np.asarray(X_test[i]).reshape(1, -1)
 
         similarities = {}
         for cls in classes:
-            centroid = centroids[cls]
+            c_vec = np.asarray(centroids[cls]).reshape(1, -1)
 
-            # COSINE SIMILARITY (FIX DIMENSION ISSUE)
-            sim = cosine_similarity(x, centroid)[0][0]
-            similarities[cls] = sim
+            sim = cosine_similarity(x_vec, c_vec)[0][0]
+            similarities[cls] = float(sim)
 
         predicted_class = max(similarities, key=similarities.get)
         predictions.append(predicted_class)
@@ -68,7 +67,6 @@ def predict_fuzzy(
         for cls, score in similarities.items():
             membership_sum[cls] += score
 
-    # Normalisasi ke persen
     total = sum(membership_sum.values())
     distribution = {
         cls: round((val / total) * 100, 2) if total > 0 else 0.0
