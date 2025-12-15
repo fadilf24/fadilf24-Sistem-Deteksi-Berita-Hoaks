@@ -1,9 +1,11 @@
 import numpy as np
+from typing import Any, Tuple, Dict
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics.pairwise import cosine_similarity
-from typing import Tuple, Dict, Any
 
+
+# ======================================================
+# Split Data
+# ======================================================
 def split_data(
     X: Any,
     y: Any,
@@ -11,95 +13,74 @@ def split_data(
     random_state: int = 42
 ) -> Tuple[Any, Any, Any, Any]:
     """
-    Membagi dataset menjadi data latih dan data uji.
+    Membagi data menjadi data latih dan data uji
     """
     return train_test_split(X, y, test_size=test_size, random_state=random_state)
 
-class FuzzyClassifier:
+
+# ======================================================
+# Train Fuzzy Classifier
+# ======================================================
+def train_fuzzy_classifier(
+    X_train: Any,
+    y_train: Any
+) -> Dict[str, Any]:
     """
-    Fuzzy Classification berbasis cosine similarity.
-    Menghasilkan derajat keanggotaan (membership value)
-    untuk setiap kelas.
+    Melatih model fuzzy berbasis centroid TF-IDF per kelas
     """
+    if X_train.shape[0] == 0:
+        raise ValueError("Data latih kosong")
 
-    def __init__(self):
-        self.class_centroids = {}
-        self.classes = None
+    classes = np.unique(y_train)
+    centroids = {}
 
-    def fit(self, X_train: Any, y_train: Any) -> None:
-        if X_train.shape[0] == 0:
-            raise ValueError("Data latih kosong, tidak bisa melatih model.")
-
-        self.classes = np.unique(y_train)
-
-        # Hitung centroid tiap kelas
-        for cls in self.classes:
-            self.class_centroids[cls] = np.mean(
-                X_train[y_train == cls], axis=0
-            )
-
-    def fuzzy_predict(self, X_test: Any) -> np.ndarray:
-        if X_test.shape[0] == 0:
-            raise ValueError("Data uji kosong, tidak bisa melakukan prediksi.")
-
-        fuzzy_results = []
-
-        for x in X_test:
-            similarities = []
-
-            for cls in self.classes:
-                sim = cosine_similarity(
-                    x, self.class_centroids[cls]
-                )[0][0]
-                similarities.append(sim)
-
-            similarities = np.array(similarities)
-
-            # Normalisasi fuzzy (jumlah = 1)
-            membership = similarities / np.sum(similarities)
-            fuzzy_results.append(membership)
-
-        return np.array(fuzzy_results)
-
-    def predict(self, X_test: Any) -> np.ndarray:
-        """
-        Menghasilkan label akhir berdasarkan
-        nilai membership tertinggi.
-        """
-        fuzzy_values = self.fuzzy_predict(X_test)
-
-def train_fuzzy_classifier(X_train: Any, y_train: Any) -> FuzzyClassifier:
-    """
-    Melatih model Fuzzy Classification.
-    """
-    model = FuzzyClassifier()
-    model.fit(X_train, y_train)
-    return model
-
-def predict_fuzzy(model: FuzzyClassifier, X_test: Any) -> np.ndarray:
-    """
-    Melakukan prediksi label menggunakan Fuzzy Classification.
-    """
-    return model.predict(X_test)
-
-def prediction_distribution(
-    y_pred: np.ndarray,
-    label_encoder: LabelEncoder
-) -> Dict[str, float]:
-    """
-    Menghitung distribusi hasil prediksi dalam persentase tiap kelas.
-    """
-
-    if y_pred.size == 0:
-        return {"empty": 0.0}
-
-    unique, counts = np.unique(y_pred, return_counts=True)
-    total = len(y_pred)
+    for cls in classes:
+        centroids[cls] = X_train[y_train == cls].mean(axis=0)
 
     return {
-        label_encoder.inverse_transform([label])[0]:
-        round((count / total) * 100, 2)
-        for label, count in zip(unique, counts)
+        "centroids": centroids,
+        "classes": classes
     }
 
-        return self.classes[np.argmax(fuzzy_values, axis=1)]
+
+# ======================================================
+# Predict Fuzzy
+# ======================================================
+def predict_fuzzy(
+    model: Dict[str, Any],
+    X_test: Any
+) -> Tuple[np.ndarray, Dict[str, float]]:
+    """
+    Prediksi fuzzy berbasis cosine similarity
+    """
+    centroids = model["centroids"]
+    classes = model["classes"]
+
+    predictions = []
+    membership_scores = {cls: 0.0 for cls in classes}
+
+    for x in X_test:
+        similarities = {}
+
+        for cls in classes:
+            centroid = centroids[cls]
+            num = np.dot(x, centroid.T)
+            denom = np.linalg.norm(x) * np.linalg.norm(centroid)
+
+            similarity = num / denom if denom != 0 else 0
+            similarities[cls] = similarity
+
+        predicted_class = max(similarities, key=similarities.get)
+        predictions.append(predicted_class)
+
+        for cls, score in similarities.items():
+            membership_scores[cls] += score
+
+    # Normalisasi derajat keanggotaan
+    total = sum(membership_scores.values())
+    distribution = {
+        cls: round((score / total) * 100, 2) if total != 0 else 0
+        for cls, score in membership_scores.items()
+    }
+
+    return np.array(predictions), distribution
