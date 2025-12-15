@@ -28,15 +28,15 @@ def train_fuzzy_classifier(
     centroids = {}
 
     for cls in classes:
-        # Mean TF-IDF vector per class (AMAN UNTUK SPARSE)
-        centroids[cls] = X_train[y_train == cls].mean(axis=0)
+        centroid = X_train[y_train == cls].mean(axis=0)
+
+        # FIX UTAMA ⬇⬇⬇
+        centroids[cls] = np.asarray(centroid).ravel()
 
     return {
         "centroids": centroids,
         "classes": classes
     }
-
-
 # ======================================================
 # Predict Fuzzy (Cosine Similarity)
 # ======================================================
@@ -52,11 +52,11 @@ def predict_fuzzy(
     membership_sum = {cls: 0.0 for cls in classes}
 
     for i in range(X_test.shape[0]):
-        x_vec = np.asarray(X_test[i]).reshape(1, -1)
+        x_vec = np.asarray(X_test[i]).ravel().reshape(1, -1)
 
         similarities = {}
         for cls in classes:
-            c_vec = np.asarray(centroids[cls]).reshape(1, -1)
+            c_vec = centroids[cls].reshape(1, -1)
 
             sim = cosine_similarity(x_vec, c_vec)[0][0]
             similarities[cls] = float(sim)
