@@ -266,3 +266,4 @@ elif selected == "Riwayat Prediksi":
     else:
         st.info("Belum ada data prediksi.")
 
+
