@@ -96,13 +96,13 @@ def prepare_data(df1, df2):
 
 @st.cache_data
 def build_model(df):
-    X, vectorizer = tfidf_transform(df["T_text"])
+    X, vectorizer = tfidf_transform(df["gabungan"])  # ✅ FIX: Pakai 'gabungan' bukan 'T_text'
     y = df["label"].values
 
     X_train, X_test, y_train, y_test = split_data(X, y)
 
     model = train_fuzzy_classifier(X_train, y_train)
-    y_pred = predict_fuzzy(model, X_test)
+    y_pred, distribution = predict_fuzzy(model, X_test)  # ✅ FIX: Unpack predictions dan distribution
 
     return model, vectorizer, X_test, y_test, y_pred
 
@@ -138,25 +138,28 @@ if selected == "Deteksi Hoaks":
             st.warning("Teks terlalu pendek atau tidak valid.")
         else:
             with st.spinner("Memproses dan memprediksi..."):
+                # ✅ FIX: Preprocessing -> Vectorize -> Predict
                 processed = preprocess_text(user_input)
                 vectorized = vectorizer.transform([processed])
 
-                fuzzy_values = model.fuzzy_predict(vectorized)[0]
-                prediction = model.predict(vectorized)[0]
+                # ✅ FIX: Unpack predictions dan distribution dari predict_fuzzy
+                pred_array, distribution = predict_fuzzy(model, vectorized)
+                prediction = pred_array[0]
 
                 label_map = {1: "Hoax", 0: "Non-Hoax"}
-                pred_label = label_map[prediction]
+                pred_label = label_map[int(prediction)]
 
+                # ✅ FIX: Ubah distribution dict menjadi probability dict
                 probas = {
-                    "Non-Hoax": float(fuzzy_values[0]),
-                    "Hoax": float(fuzzy_values[1])
+                    "Non-Hoax": distribution.get(0, 0) / 100,  # Konversi dari persen
+                    "Hoax": distribution.get(1, 0) / 100
                 }
 
             st.success(f"🧠 Prediksi Model: **{pred_label}**")
 
             df_proba = pd.DataFrame({
-                "Label": probas.keys(),
-                "Membership": probas.values()
+                "Label": list(probas.keys()),
+                "Membership": list(probas.values())
             })
 
             fig = px.pie(
@@ -173,8 +176,8 @@ if selected == "Deteksi Hoaks":
                     predicted_label=pred_label,
                     used_links=[],
                     distribution={
-                        k: f"{v*100:.2f}%"
-                        for k, v in probas.items()
+                        k: f"{v:.2f}%"
+                        for k, v in distribution.items()
                     }
                 )
 
@@ -220,7 +223,7 @@ elif selected == "Preprocessing":
     hasil = preprocess_with_steps(contoh_teks)
 
     df_steps = pd.DataFrame([
-        {"Tahap": k, "Hasil": v}
+        {"Tahap": k, "Hasil": str(v)}  # ✅ FIX: Konversi ke string
         for k, v in hasil.items()
     ])
 
@@ -265,5 +268,3 @@ elif selected == "Riwayat Prediksi":
         )
     else:
         st.info("Belum ada data prediksi.")
-
-
