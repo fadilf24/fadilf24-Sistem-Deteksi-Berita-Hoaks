@@ -28,15 +28,20 @@ def train_fuzzy_classifier(
     centroids = {}
 
     for cls in classes:
-        centroid = X_train[y_train == cls].mean(axis=0)
-
-        # FIX UTAMA ⬇⬇⬇
+        # ✅ FIX: Konversi ke dense array jika sparse matrix
+        X_cls = X_train[y_train == cls]
+        if hasattr(X_cls, 'toarray'):  # Jika sparse matrix
+            X_cls = X_cls.toarray()
+        
+        centroid = X_cls.mean(axis=0)
         centroids[cls] = np.asarray(centroid).ravel()
 
     return {
         "centroids": centroids,
         "classes": classes
     }
+
+
 # ======================================================
 # Predict Fuzzy (Cosine Similarity)
 # ======================================================
@@ -44,6 +49,9 @@ def predict_fuzzy(
     model: Dict[str, Any],
     X_test: Any
 ) -> Tuple[np.ndarray, Dict[str, float]]:
+    """
+    ✅ FIXED: Mengembalikan (predictions, distribution)
+    """
 
     centroids = model["centroids"]
     classes = model["classes"]
@@ -51,8 +59,14 @@ def predict_fuzzy(
     predictions = []
     membership_sum = {cls: 0.0 for cls in classes}
 
-    for i in range(X_test.shape[0]):
-        x_vec = np.asarray(X_test[i]).ravel().reshape(1, -1)
+    # ✅ FIX: Konversi sparse matrix ke dense jika perlu
+    if hasattr(X_test, 'toarray'):
+        X_test_dense = X_test.toarray()
+    else:
+        X_test_dense = X_test
+
+    for i in range(X_test_dense.shape[0]):
+        x_vec = np.asarray(X_test_dense[i]).ravel().reshape(1, -1)
 
         similarities = {}
         for cls in classes:
